@@ -1,2 +1,4 @@
 # 校园论坛后端
-satoken + springboot + mybatis-plus 
+satoken鉴权 + springboot + mybatis-plus +redis
+todo - mq集成
+前端地址：https://github.com/hufaei/forum--template
