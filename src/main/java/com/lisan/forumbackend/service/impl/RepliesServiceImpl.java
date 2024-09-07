@@ -48,7 +48,7 @@ public class RepliesServiceImpl extends ServiceImpl<RepliesMapper, Replies> impl
         Long cid = replies.getCommentId();
 
         if (StringUtils.isNotBlank(content)) {
-            ThrowUtils.throwIf(content.length() > 100, ErrorCode.PARAMS_ERROR, "标题过长");
+            ThrowUtils.throwIf(content.length() > 100, ErrorCode.PARAMS_ERROR, "内容过长");
         }
         // 校验存在性
         QueryWrapper<Comments> queryWrapper = new QueryWrapper<>();

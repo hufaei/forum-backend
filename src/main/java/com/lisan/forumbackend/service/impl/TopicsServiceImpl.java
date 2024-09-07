@@ -1,6 +1,7 @@
 package com.lisan.forumbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lisan.forumbackend.common.ErrorCode;
 import com.lisan.forumbackend.exception.BusinessException;
@@ -8,15 +9,18 @@ import com.lisan.forumbackend.exception.ThrowUtils;
 import com.lisan.forumbackend.mapper.SectionsMapper;
 import com.lisan.forumbackend.mapper.TopicsMapper;
 import com.lisan.forumbackend.mapper.UsersMapper;
+import com.lisan.forumbackend.model.dto.topics.TopicPagesRequest;
 import com.lisan.forumbackend.model.entity.Comments;
 import com.lisan.forumbackend.model.entity.Sections;
 import com.lisan.forumbackend.model.entity.Topics;
 import com.lisan.forumbackend.model.entity.Users;
+import com.lisan.forumbackend.model.vo.CommentsVO;
 import com.lisan.forumbackend.model.vo.TopicsVO;
 import com.lisan.forumbackend.service.CommentsService;
 import com.lisan.forumbackend.service.TopicsService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -39,6 +43,8 @@ public class TopicsServiceImpl extends ServiceImpl<TopicsMapper, Topics> impleme
     @Autowired
     private SectionsMapper sectionsMapper;
     @Autowired
+    private TopicsMapper topicsMapper;
+    @Autowired
     private CommentsService commentsService;
     @Autowired
     private RedisTemplate redisTemplate;
@@ -60,7 +66,7 @@ public class TopicsServiceImpl extends ServiceImpl<TopicsMapper, Topics> impleme
         ThrowUtils.throwIf(sid == null, ErrorCode.PARAMS_ERROR, "必要参数不能为空");
 
         if (StringUtils.isNotBlank(content)) {
-            ThrowUtils.throwIf(content.length() > 100, ErrorCode.PARAMS_ERROR, "内容过长");}
+            ThrowUtils.throwIf(content.length() > 150, ErrorCode.PARAMS_ERROR, "内容过长");}
         // 校验sectionId是否存在
         QueryWrapper<Sections> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("id", sid);
@@ -85,9 +91,6 @@ public class TopicsServiceImpl extends ServiceImpl<TopicsMapper, Topics> impleme
         if (!topicRemoved) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR);
         }
-
-
-
         return true;
     }
 
@@ -114,26 +117,35 @@ public class TopicsServiceImpl extends ServiceImpl<TopicsMapper, Topics> impleme
     }
 
     @Override
-    public List<TopicsVO> getTopicsVOBySectionId(Long sectionId) {
+    public List<TopicsVO> getTopicsVOBySectionId(TopicPagesRequest topicPagesRequest) {
+        Long sectionId = topicPagesRequest.getSectionId();
         // 检查sectionId是否存在
         Sections section = sectionsMapper.selectById(sectionId);
         ThrowUtils.throwIf(section == null, ErrorCode.NOT_FOUND_ERROR);
 
-        // 查询该板块下的所有话题
-        List<Topics> topicsList = this.list(new QueryWrapper<Topics>().eq("section_id", sectionId));
+        // 设置默认加载页面大小
+        int pageSize = 10;
+        int currentPage = (topicPagesRequest.getCurrent() > 0) ? topicPagesRequest.getCurrent() : 1;
+        // 分页查询评论，按创建时间降序排序
+        Page<Topics> page = new Page<>(currentPage, pageSize);
+        QueryWrapper<Topics> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("section_id", sectionId)
+                .orderByDesc("created_at");  // 按创建时间降序排序
+        Page<Topics> topicsPage = this.page(page, queryWrapper);
 
-        // 将Topics转换为TopicsVO并返回
-        return topicsList.stream()
-                .map(topics -> {
-                    TopicsVO topicsVO = TopicsVO.objToVo(topics);
-                    topicsVO.setSectionName(section.getName());
-
-//                    topicsVO.setNickName(nickname);
-                    return topicsVO;
-                })
+        // 将 Topic 转换为 vo 并返回
+        return topicsPage.getRecords().stream()
+                .map(TopicsVO::objToVo)
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public TopicsVO getTopicsVOById(Long topicId) {
+        Topics topic = topicsMapper.selectById(topicId);
+        ThrowUtils.throwIf(topic == null, ErrorCode.NOT_FOUND_ERROR);
+
+        return TopicsVO.objToVo(topic);
+    }
 
 
 }

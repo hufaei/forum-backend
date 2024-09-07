@@ -1,6 +1,7 @@
 package com.lisan.forumbackend.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lisan.forumbackend.model.dto.topics.TopicPagesRequest;
 import com.lisan.forumbackend.model.entity.Topics;
 import com.lisan.forumbackend.model.vo.TopicsVO;
 
@@ -32,18 +33,12 @@ public interface TopicsService extends IService<Topics> {
     /**
      * 获取话题表封装
      *
-     * @param sectionId
+     * @param topicPagesRequest
      * @return
      */
-    List<TopicsVO> getTopicsVOBySectionId(Long sectionId);
+    List<TopicsVO> getTopicsVOBySectionId(TopicPagesRequest topicPagesRequest);
 
-//    /**
-//     * 分页获取话题表封装
-//     *
-//     * @param topicsPage
-//     * @param request
-//     * @return
-//     */
-//    Page<TopicsVO> getTopicsVOPage(Page<Topics> topicsPage, HttpServletRequest request);
+    TopicsVO getTopicsVOById(Long topicId);
+
 
 }

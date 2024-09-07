@@ -1,6 +1,7 @@
 server:
   port: 8080
 spring:
+  # redis
   redis:
     host: 127.0.0.1
     database: 0
@@ -11,12 +12,26 @@ spring:
         max-active: 8
         min-idle: 0
         max-idle: 8
+  # sql
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/forum?serverTimezone=Asia/Shanghai
     username: root
     password: 123456
 
+  # rabbitmq
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    stream:
+      username: guest
+      password: guest
+    virtual-host: /
+    publisher-confirm-type: correlated # 交换机确认
+    publisher-returns: true # 队列确认
+    listener:
+      direct:
+        acknowledge-mode: manual # 手动确认ack信息
   # jackson
   jackson:
     time-zone: Asia/Shanghai  # 指定时区

@@ -2,16 +2,13 @@ package com.lisan.forumbackend.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.lisan.forumbackend.annotation.AuthCheck;
 import com.lisan.forumbackend.common.BaseResponse;
 import com.lisan.forumbackend.common.DeleteRequest;
 import com.lisan.forumbackend.common.ErrorCode;
 import com.lisan.forumbackend.common.ResultUtils;
-import com.lisan.forumbackend.constant.UserConstant;
 import com.lisan.forumbackend.exception.BusinessException;
 import com.lisan.forumbackend.exception.ThrowUtils;
 import com.lisan.forumbackend.model.dto.announcements.AnnouncementsAddRequest;
-import com.lisan.forumbackend.model.dto.announcements.AnnouncementsEditRequest;
 import com.lisan.forumbackend.model.dto.announcements.AnnouncementsQueryRequest;
 import com.lisan.forumbackend.model.dto.announcements.AnnouncementsUpdateRequest;
 import com.lisan.forumbackend.model.entity.Announcements;
@@ -25,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import org.apache.commons.lang3.StringUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 通告表接口
@@ -158,13 +157,14 @@ public class AnnouncementsController {
      * @return
      */
     @PostMapping("/list/page")
-    public BaseResponse<Page<Announcements>> listAnnouncementsByPage(@RequestBody AnnouncementsQueryRequest announcementsQueryRequest) {
+    public BaseResponse<Page<AnnouncementsVO>> listAnnouncementsByPage(@RequestBody AnnouncementsQueryRequest announcementsQueryRequest, HttpServletRequest request) {
         long current = announcementsQueryRequest.getCurrent();
         long size = announcementsQueryRequest.getPageSize();
-        System.out.println(current+":"+size);
 
-        // 判断是否为查询所有
-        boolean isQueryAll = announcementsQueryRequest.getId() == null && StringUtils.isBlank(announcementsQueryRequest.getSearchText());
+        // 判断是否为无条件查询
+        boolean isQueryAll = announcementsQueryRequest.getId() == null
+                && StringUtils.isBlank(announcementsQueryRequest.getSearchText())
+                && StringUtils.isBlank(announcementsQueryRequest.getSortField());
 
         // 查询数据库
         Page<Announcements> announcementsPage;
@@ -173,12 +173,22 @@ public class AnnouncementsController {
         } else {
             announcementsPage = announcementsService.page(new Page<>(current, size), announcementsService.getQueryWrapper(announcementsQueryRequest));
         }
-//        System.out.println(announcementsPage);
+
         // 判断查询结果是否为空
         if (announcementsPage == null || announcementsPage.getTotal() == 0) {
             return ResultUtils.success(new Page<>());
         }
-        return ResultUtils.success(announcementsPage);
+
+        // 转换为 AnnouncementsVO
+        List<AnnouncementsVO> announcementsVOList = announcementsPage.getRecords().stream()
+                .map(announcement -> announcementsService.getAnnouncementsVO(announcement, request))
+                .collect(Collectors.toList());
+
+        // 构建返回的分页对象
+        Page<AnnouncementsVO> announcementsVOPage = new Page<>(current, size, announcementsPage.getTotal());
+        announcementsVOPage.setRecords(announcementsVOList);
+
+        return ResultUtils.success(announcementsVOPage);
     }
 
 }

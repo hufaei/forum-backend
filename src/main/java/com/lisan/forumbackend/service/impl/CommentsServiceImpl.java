@@ -8,6 +8,7 @@ import com.lisan.forumbackend.exception.ThrowUtils;
 import com.lisan.forumbackend.mapper.CommentsMapper;
 import com.lisan.forumbackend.mapper.TopicsMapper;
 import com.lisan.forumbackend.mapper.UsersMapper;
+import com.lisan.forumbackend.model.dto.comments.CommentPagesRequest;
 import com.lisan.forumbackend.model.entity.Comments;
 import com.lisan.forumbackend.model.entity.Replies;
 import com.lisan.forumbackend.model.entity.Topics;
@@ -21,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import javax.annotation.Resource;
 import java.io.Serializable;
 import java.util.List;
@@ -90,25 +91,35 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments> i
         return true;
     }
     @Override
-    public List<CommentsVO> getCommentsByTopicId(Long topicId) {
-        // 检查topicId是否存在
+    public List<CommentsVO> getCommentsByTopicId(CommentPagesRequest commentPagesRequest) {
+        // 检查 topicId 是否存在
+        Long topicId = commentPagesRequest.getTopicId();
         Topics topic = topicsMapper.selectById(topicId);
         ThrowUtils.throwIf(topic == null, ErrorCode.NOT_FOUND_ERROR);
 
-        // 查询该话题下的所有评论
-        List<Comments> commentList = this.list(new QueryWrapper<Comments>().eq("topic_id", topicId));
+        // 设置默认加载页面大小
+        int pageSize = 10;
+        int currentPage = (commentPagesRequest.getCurrent() > 0) ? commentPagesRequest.getCurrent() : 1;
 
-        // 将Comment转换为CommentVO并返回
-        return commentList.stream()
-                .map(Comments->{
-                    CommentsVO commentsVO = CommentsVO.objToVo(Comments);
+        // 分页查询评论，按创建时间降序排序
+        Page<Comments> page = new Page<>(currentPage, pageSize);
+        QueryWrapper<Comments> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("topic_id", topicId)
+                .orderByDesc("created_at");  // 按创建时间降序排序
+        Page<Comments> commentPage = this.page(page, queryWrapper);
+
+        // 将 Comment 转换为 CommentVO 并返回
+        return commentPage.getRecords().stream()
+                .map(comment -> {
+                    CommentsVO commentsVO = CommentsVO.objToVo(comment);
                     // 获取用户昵称
                     Users user = usersMapper.selectById(commentsVO.getUserId());
                     String nickname = (user != null) ? user.getNickname() : "该用户不存在";
                     commentsVO.setNickName(nickname);
-                return commentsVO;
+                    return commentsVO;
                 })
                 .collect(Collectors.toList());
     }
+
 
 }

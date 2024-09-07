@@ -2,6 +2,7 @@ package com.lisan.forumbackend.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.enums.SqlKeyword;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lisan.forumbackend.common.ErrorCode;
@@ -18,6 +19,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Optional;
+
 /**
  * 通告表服务实现
  *
@@ -98,11 +101,14 @@ public class AnnouncementsServiceImpl extends ServiceImpl<AnnouncementsMapper, A
         // 搜索词——标题、内容搜索搜索
         if (StringUtils.isNotBlank(searchText)) {
             queryWrapper.and(qw -> qw.like("title", searchText).or().like("content", searchText));
-        }
-        // 排序规则
+            }
+
+//      排序规则
+//      排序字段按照实体类或者sql表的名称均可
         queryWrapper.orderBy(SqlUtils.validSortField(sortField),
                 sortOrder.equals("ascend"),
                 sortField);
+
         return queryWrapper;
     }
 

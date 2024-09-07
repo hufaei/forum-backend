@@ -8,7 +8,7 @@ import java.util.Properties;
 
 /**
  * @version 1.0
- * @auther Treay_kz
+ * @auther ぼつち
  */
 public class EmailUtils {
 

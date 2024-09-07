@@ -6,7 +6,7 @@ import java.net.InetAddress;
 /**
  * 网络工具类
  *
- * treay
+ * ぼつち
  * 
  */
 public class NetUtils {

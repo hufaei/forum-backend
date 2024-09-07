@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 /**
  * Spring 上下文获取工具
  *
- * treay
+ * ぼつち
  * 
  */
 @Component

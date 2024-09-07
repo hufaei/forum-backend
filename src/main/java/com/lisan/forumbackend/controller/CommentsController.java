@@ -14,7 +14,7 @@ import com.lisan.forumbackend.service.CommentsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
-
+import com.lisan.forumbackend.model.dto.comments.CommentPagesRequest;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -94,11 +94,14 @@ public class CommentsController {
     }
 
 
-    @GetMapping("/get/CommentsVo/{topicId}")
-    public BaseResponse<List<CommentsVO>> getCommentsByTopicId(@PathVariable("topicId") Long topicId, HttpServletRequest request) {
+    @GetMapping("/get/CommentsVo/{topicId}/{current}")
+    public BaseResponse<List<CommentsVO>> getCommentsByTopicId(@PathVariable("topicId") Long topicId, @PathVariable("current") int current, HttpServletRequest request) {
         ThrowUtils.throwIf(topicId == null || topicId <= 0, ErrorCode.PARAMS_ERROR);
+        CommentPagesRequest commentPagesRequest = new CommentPagesRequest();
+        commentPagesRequest.setTopicId(topicId);
+        commentPagesRequest.setCurrent(current);
         // 查询数据库
-        List<CommentsVO> commentVOList = commentsService.getCommentsByTopicId(topicId);
+        List<CommentsVO> commentVOList = commentsService.getCommentsByTopicId(commentPagesRequest);
         return ResultUtils.success(commentVOList);
     }
 

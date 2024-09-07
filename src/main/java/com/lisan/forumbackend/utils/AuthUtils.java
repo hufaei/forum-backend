@@ -4,6 +4,10 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.lisan.forumbackend.common.ErrorCode;
 import com.lisan.forumbackend.exception.BusinessException;
 
+/**
+ * 暂定鉴权操作集合体
+ * @author ぼつち
+ */
 public class AuthUtils {
 
     // 确保用户已登录且为普通用户

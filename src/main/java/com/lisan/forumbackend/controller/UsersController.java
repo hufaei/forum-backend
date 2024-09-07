@@ -13,7 +13,9 @@ import com.lisan.forumbackend.model.dto.users.UsersLoginRequest;
 import com.lisan.forumbackend.model.dto.users.UsersPagesRequest;
 import com.lisan.forumbackend.model.dto.users.UsersUpdateRequest;
 import com.lisan.forumbackend.model.entity.Users;
+import com.lisan.forumbackend.model.enums.TuccEnum;
 import com.lisan.forumbackend.model.vo.UsersVO;
+import com.lisan.forumbackend.service.ImageService;
 import com.lisan.forumbackend.service.UsersService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
@@ -22,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,6 +43,9 @@ public class UsersController {
 
     @Resource
     private UsersService usersService;
+
+    @Resource
+    private ImageService imageService;
 
     // region 增删改查
 
@@ -97,7 +104,7 @@ public class UsersController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
-//    @CrossOrigin(origins = "http://localhost:5173")
+
     @PostMapping("/login")
 
     public BaseResponse<UsersVO> login(@RequestBody UsersLoginRequest request, HttpServletResponse response) {
@@ -156,6 +163,9 @@ public class UsersController {
         if (usersUpdateRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+
+        StpUtil.checkLogin();
+
         //传入updaterequest时不指定id，根据token直接设置为用户登录id
         usersUpdateRequest.setId(StpUtil.getLoginIdAsLong());
 
@@ -190,5 +200,36 @@ public class UsersController {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "登出失败");
         }
     }
+
+    /**
+     * 用户上传头像（基于图床）
+     * @param file
+     * @return
+     */
+    @PostMapping("/updateAvatar")
+    public BaseResponse<Boolean> uploadImage(@RequestParam("file") MultipartFile file) {
+        StpUtil.checkLogin();  // 验证用户是否登录
+
+        try {
+            String imageUrl = imageService.uploadImage(file, TuccEnum.AVATAR_ID);
+
+            // 获取当前登录用户的 ID
+            Long userId = StpUtil.getLoginIdAsLong();
+
+            // 获取用户实体
+            Users user = usersService.getById(userId);
+            ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
+
+            // 更新用户头像 URL
+            user.setAvatar(imageUrl);
+            boolean result = usersService.updateById(user);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+
+            return ResultUtils.success(true,imageUrl);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "上传失败");
+        }
+    }
+
 
 }

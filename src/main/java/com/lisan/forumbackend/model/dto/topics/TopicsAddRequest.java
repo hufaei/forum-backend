@@ -32,7 +32,7 @@ public class TopicsAddRequest implements Serializable {
     /**
      * 图片附件
      */
-    private String image;
+    private List<String> image;
 
 
 

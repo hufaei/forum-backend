@@ -1,6 +1,7 @@
 package com.lisan.forumbackend.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lisan.forumbackend.model.dto.comments.CommentPagesRequest;
 import com.lisan.forumbackend.model.entity.Comments;
 import com.lisan.forumbackend.model.vo.CommentsVO;
 
@@ -24,32 +25,6 @@ public interface CommentsService extends IService<Comments> {
 
     boolean removeById(Serializable id);
 
-    List<CommentsVO> getCommentsByTopicId(Long topicId);
-//
-//    /**
-//     * 获取查询条件
-//     *
-//     * @param commentsQueryRequest
-//     * @return
-//     */
-//    QueryWrapper<Comments> getQueryWrapper(CommentsQueryRequest commentsQueryRequest);
-//    
-//    /**
-//     * 获取评论表封装
-//     *
-//     * @param comments
-//     * @param request
-//     * @return
-//     */
-//    CommentsVO getCommentsVO(Comments comments, HttpServletRequest request);
-//
-//    /**
-//     * 分页获取评论表封装
-//     *
-//     * @param commentsPage
-//     * @param request
-//     * @return
-//     */
-//    Page<CommentsVO> getCommentsVOPage(Page<Comments> commentsPage, HttpServletRequest request);
+    List<CommentsVO> getCommentsByTopicId(CommentPagesRequest commentPagesRequest);
 
 }
