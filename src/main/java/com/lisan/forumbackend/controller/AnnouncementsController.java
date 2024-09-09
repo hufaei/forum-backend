@@ -15,14 +15,16 @@ import com.lisan.forumbackend.model.entity.Announcements;
 import com.lisan.forumbackend.model.vo.AnnouncementsVO;
 import com.lisan.forumbackend.service.AnnouncementsService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
-import org.apache.commons.lang3.StringUtils;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +42,11 @@ public class AnnouncementsController {
     private RedisTemplate redisTemplate;
 
 
+    // Redis 缓存键
+    private static final String ANNOUNCEMENTS_CACHE_KEY = "announcement:latest";
+    // Redis 缓存过期时间：15天
+    private static final long CACHE_EXPIRATION = 15L * 24 * 60 * 60; // 15天，单位为秒
+
     /**
      * 创建通告表
      * 仅管理员身份可用
@@ -51,7 +58,6 @@ public class AnnouncementsController {
 
         StpUtil.checkLogin();
         StpUtil.checkRole("ADMIN");
-
         ThrowUtils.throwIf(announcementsAddRequest == null, ErrorCode.PARAMS_ERROR);
 
         // DTO 转换 实体类
@@ -65,6 +71,9 @@ public class AnnouncementsController {
         announcements.setIsDelete(0);
         boolean result = announcementsService.save(announcements);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+
+        // 成功添加后，删除缓存
+        redisTemplate.delete(ANNOUNCEMENTS_CACHE_KEY);
 
         // 返回新写入的数据 id
         long newAnnouncementsId = announcements.getId();
@@ -97,6 +106,8 @@ public class AnnouncementsController {
         // 操作数据库
         boolean result = announcementsService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+
+        redisTemplate.delete(ANNOUNCEMENTS_CACHE_KEY);
         return ResultUtils.success(true);
     }
 
@@ -130,6 +141,8 @@ public class AnnouncementsController {
         // 操作数据库
         boolean result = announcementsService.updateById(announcements);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+
+        redisTemplate.delete(ANNOUNCEMENTS_CACHE_KEY);
         return ResultUtils.success(true);
     }
 
@@ -158,8 +171,18 @@ public class AnnouncementsController {
      */
     @PostMapping("/list/page")
     public BaseResponse<Page<AnnouncementsVO>> listAnnouncementsByPage(@RequestBody AnnouncementsQueryRequest announcementsQueryRequest, HttpServletRequest request) {
-        long current = announcementsQueryRequest.getCurrent();
-        long size = announcementsQueryRequest.getPageSize();
+        // 从 Redis 获取缓存数据
+        List<AnnouncementsVO> cachedAnnouncements = (List<AnnouncementsVO>) redisTemplate.opsForValue().get(ANNOUNCEMENTS_CACHE_KEY);
+
+        if (cachedAnnouncements != null) {
+            // 将缓存数据转换为分页对象并返回
+            Page<AnnouncementsVO> cachedPage = new Page<>(1, cachedAnnouncements.size(), cachedAnnouncements.size());
+            cachedPage.setRecords(cachedAnnouncements);
+            return ResultUtils.success(cachedPage);
+        }
+
+        long current = 1;
+        long size = 3;
 
         // 判断是否为无条件查询
         boolean isQueryAll = announcementsQueryRequest.getId() == null
@@ -183,6 +206,9 @@ public class AnnouncementsController {
         List<AnnouncementsVO> announcementsVOList = announcementsPage.getRecords().stream()
                 .map(announcement -> announcementsService.getAnnouncementsVO(announcement, request))
                 .collect(Collectors.toList());
+
+        // 更新到Redis缓存
+        redisTemplate.opsForValue().set(ANNOUNCEMENTS_CACHE_KEY, announcementsVOList, CACHE_EXPIRATION, TimeUnit.SECONDS);
 
         // 构建返回的分页对象
         Page<AnnouncementsVO> announcementsVOPage = new Page<>(current, size, announcementsPage.getTotal());

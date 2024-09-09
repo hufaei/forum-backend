@@ -7,14 +7,17 @@ import com.lisan.forumbackend.common.ErrorCode;
 import com.lisan.forumbackend.common.ResultUtils;
 import com.lisan.forumbackend.exception.BusinessException;
 import com.lisan.forumbackend.exception.ThrowUtils;
+import com.lisan.forumbackend.model.dto.comments.CommentPagesRequest;
 import com.lisan.forumbackend.model.dto.comments.CommentsAddRequest;
 import com.lisan.forumbackend.model.entity.Comments;
 import com.lisan.forumbackend.model.vo.CommentsVO;
 import com.lisan.forumbackend.service.CommentsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
-import com.lisan.forumbackend.model.dto.comments.CommentPagesRequest;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -30,8 +33,8 @@ public class CommentsController {
 
     @Resource
     private CommentsService commentsService;
-
-//     region 增删改查
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 创建评论表

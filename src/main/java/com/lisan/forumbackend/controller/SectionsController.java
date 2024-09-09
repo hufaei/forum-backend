@@ -95,7 +95,6 @@ public class SectionsController {
      */
     @GetMapping("/all")
     public BaseResponse<List<SectionsVO>> getAllSections() {
-        StpUtil.checkLogin();
         // 查询所有板块信息
         List<SectionsVO> sectionsVOList = sectionsService.getAllSections();
         return ResultUtils.success(sectionsVOList);

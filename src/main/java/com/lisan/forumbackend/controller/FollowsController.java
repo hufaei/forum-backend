@@ -2,22 +2,19 @@ package com.lisan.forumbackend.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lisan.forumbackend.common.BaseResponse;
-import com.lisan.forumbackend.common.DeleteRequest;
 import com.lisan.forumbackend.common.ErrorCode;
 import com.lisan.forumbackend.common.ResultUtils;
-import com.lisan.forumbackend.exception.BusinessException;
 import com.lisan.forumbackend.exception.ThrowUtils;
 import com.lisan.forumbackend.model.dto.follows.FollowsAddRequest;
-import com.lisan.forumbackend.model.dto.follows.FollowsEditRequest;
 import com.lisan.forumbackend.model.dto.follows.FollowsQueryRequest;
-import com.lisan.forumbackend.model.dto.follows.FollowsUpdateRequest;
 import com.lisan.forumbackend.model.entity.Follows;
 import com.lisan.forumbackend.model.vo.FollowsVO;
 import com.lisan.forumbackend.service.FollowsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -35,7 +32,8 @@ public class FollowsController {
 
     @Resource
     private FollowsService followsService;
-    
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     // region 增删改查
 

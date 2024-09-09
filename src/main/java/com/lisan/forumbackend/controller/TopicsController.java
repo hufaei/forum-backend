@@ -7,8 +7,8 @@ import com.lisan.forumbackend.common.ErrorCode;
 import com.lisan.forumbackend.common.ResultUtils;
 import com.lisan.forumbackend.exception.BusinessException;
 import com.lisan.forumbackend.exception.ThrowUtils;
-import com.lisan.forumbackend.model.dto.topics.TopicsAddRequest;
 import com.lisan.forumbackend.model.dto.topics.TopicPagesRequest;
+import com.lisan.forumbackend.model.dto.topics.TopicsAddRequest;
 import com.lisan.forumbackend.model.entity.Topics;
 import com.lisan.forumbackend.model.enums.TuccEnum;
 import com.lisan.forumbackend.model.vo.TopicsVO;
@@ -17,12 +17,13 @@ import com.lisan.forumbackend.service.ImageService;
 import com.lisan.forumbackend.service.TopicsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -40,6 +41,9 @@ public class TopicsController {
     private CommentsService commentService;
     @Resource
     private ImageService imageService;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
     @PostMapping("/uploadImages")
     public BaseResponse<String> uploadImages(@RequestParam("file") MultipartFile files, @RequestParam("sectionId") Long sectionId) {
         // 获取对应的 TuccEnum 枚举
@@ -162,6 +166,8 @@ public class TopicsController {
     /**
      * 根据 topic_id 获取话题表（封装类）
      * @param topicId
+     *
+     *
      * @return
      */
     @GetMapping("/get/TopicVo/{topicId}")
