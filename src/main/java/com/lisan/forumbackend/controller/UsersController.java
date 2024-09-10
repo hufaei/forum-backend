@@ -18,8 +18,6 @@ import com.lisan.forumbackend.service.UsersService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,8 +40,7 @@ public class UsersController {
 
     @Resource
     private ImageService imageService;
-    @Autowired
-    private RedisTemplate redisTemplate;
+
 
     // region 增删改查
 
@@ -77,7 +74,7 @@ public class UsersController {
 
     /**
      * 用户注销
-     * 用户和管理员可用
+     * 管理员可用
      * @param deleteRequest
      * @param request
      * @return
@@ -87,22 +84,52 @@ public class UsersController {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-//        StpUtil.checkLogin();
+        StpUtil.checkLogin();
 //        long id = StpUtil.getLoginIdAsLong(); // 获取当前会话账号id, 并转化为`long`类型
         long id = deleteRequest.getId();
         // 判断是否存在
         Users oldUsers = usersService.getById(id);
         ThrowUtils.throwIf(oldUsers == null, ErrorCode.NOT_FOUND_ERROR);
-//        // 仅本人或管理员可删除
-//        if (!oldUsers.getUserId().equals(Users.getId()) && !usersService.isAdmin(request)) {
-//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-//        }
+
+        // 鉴权
+        if (!StpUtil.hasRole("ADMIN")) {
+            ThrowUtils.throwIf(true, ErrorCode.NO_AUTH_ERROR);
+        }
+        // 先踢下线
+        StpUtil.kickout(id);
+        // 再封禁账号,单位：s(-1:永久）
+        StpUtil.disable(id, -1);
         // 操作数据库
         boolean result = usersService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
+    /**
+     * 用户注销
+     * 用户可用
+     * @param request
+     * @return
+     */
+    @PostMapping("/self/delete")
+    public BaseResponse<Boolean> deleteUsers(HttpServletRequest request) {
 
+        StpUtil.checkLogin();
+        long id = StpUtil.getLoginIdAsLong(); // 获取当前会话账号id,
+        if (id <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 判断是否存在
+        Users oldUsers = usersService.getById(id);
+        ThrowUtils.throwIf(oldUsers == null, ErrorCode.NOT_FOUND_ERROR);
+        // 先退出登录
+        StpUtil.logout();
+        // 再封禁账号,单位：s(-1:永久）
+        StpUtil.disable(id, -1);
+        // 操作数据库
+        boolean result = usersService.removeById(id);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(true);
+    }
     @PostMapping("/login")
 
     public BaseResponse<UsersVO> login(@RequestBody UsersLoginRequest request, HttpServletResponse response) {
@@ -116,6 +143,9 @@ public class UsersController {
         Users user = usersService.login(request);
         if(user!=null){
             UsersVO usersVO = UsersVO.objToVo(user);
+
+            // 校验指定账号是否已被封禁，如果被封禁则抛出异常 `DisableServiceException`
+            StpUtil.checkDisable(user.getId());
             // 框架登录生成token
             StpUtil.login(user.getId());
             /**

@@ -13,6 +13,8 @@ import com.lisan.forumbackend.model.vo.SectionsVO;
 import com.lisan.forumbackend.service.SectionsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -30,6 +32,12 @@ public class SectionsController {
 
     @Resource
     private SectionsService sectionsService;
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    // Redis 缓存键
+    private static final String SECTION_KEY = "sections";
+
 
     /**
      * 创建板块表
@@ -55,6 +63,9 @@ public class SectionsController {
 
         boolean result = sectionsService.save(sections);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+
+        // 成功添加后，删除缓存
+        redisTemplate.delete(SECTION_KEY);
 
         long newSectionsId = sections.getId();
         return ResultUtils.success(newSectionsId);
@@ -86,6 +97,8 @@ public class SectionsController {
         // 操作数据库
         boolean result = sectionsService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        // 成功添加后，删除缓存
+        redisTemplate.delete(SECTION_KEY);
         return ResultUtils.success(true);
     }
 
@@ -95,8 +108,19 @@ public class SectionsController {
      */
     @GetMapping("/all")
     public BaseResponse<List<SectionsVO>> getAllSections() {
+
+        // 从 Redis 获取缓存数据
+        List<SectionsVO> cachedSections = (List<SectionsVO>) redisTemplate.opsForValue().get(SECTION_KEY);
+
+        if (cachedSections != null) {
+            return ResultUtils.success(cachedSections);
+        }
         // 查询所有板块信息
         List<SectionsVO> sectionsVOList = sectionsService.getAllSections();
+
+        // 更新到Redis缓存
+        redisTemplate.opsForValue().set(SECTION_KEY, sectionsVOList);
+
         return ResultUtils.success(sectionsVOList);
     }
 

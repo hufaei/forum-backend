@@ -17,8 +17,6 @@ import com.lisan.forumbackend.service.ImageService;
 import com.lisan.forumbackend.service.TopicsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,8 +40,6 @@ public class TopicsController {
     @Resource
     private ImageService imageService;
 
-    @Autowired
-    private RedisTemplate redisTemplate;
     @PostMapping("/uploadImages")
     public BaseResponse<String> uploadImages(@RequestParam("file") MultipartFile files, @RequestParam("sectionId") Long sectionId) {
         // 获取对应的 TuccEnum 枚举

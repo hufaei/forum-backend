@@ -45,7 +45,7 @@ public class AnnouncementsController {
     // Redis 缓存键
     private static final String ANNOUNCEMENTS_CACHE_KEY = "announcement:latest";
     // Redis 缓存过期时间：15天
-    private static final long CACHE_EXPIRATION = 15L * 24 * 60 * 60; // 15天，单位为秒
+    private static final long EXPIRATION = 15L * 24 * 60 * 60; // 15天，单位为秒
 
     /**
      * 创建通告表
@@ -148,7 +148,7 @@ public class AnnouncementsController {
 
     /**
      * 根据 id 获取通告表视图
-     *
+     * 暂无用
      * @param id
      * @return
      */
@@ -208,7 +208,7 @@ public class AnnouncementsController {
                 .collect(Collectors.toList());
 
         // 更新到Redis缓存
-        redisTemplate.opsForValue().set(ANNOUNCEMENTS_CACHE_KEY, announcementsVOList, CACHE_EXPIRATION, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(ANNOUNCEMENTS_CACHE_KEY, announcementsVOList, EXPIRATION, TimeUnit.SECONDS);
 
         // 构建返回的分页对象
         Page<AnnouncementsVO> announcementsVOPage = new Page<>(current, size, announcementsPage.getTotal());
