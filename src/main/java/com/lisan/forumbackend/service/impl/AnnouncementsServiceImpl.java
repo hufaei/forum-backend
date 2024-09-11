@@ -1,9 +1,6 @@
 package com.lisan.forumbackend.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.enums.SqlKeyword;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lisan.forumbackend.common.ErrorCode;
 import com.lisan.forumbackend.exception.ThrowUtils;
@@ -17,9 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import java.util.Optional;
 
 /**
  * 通告表服务实现
@@ -54,11 +50,10 @@ public class AnnouncementsServiceImpl extends ServiceImpl<AnnouncementsMapper, A
      * 获取通告表封装
      *
      * @param announcements
-     * @param request
      * @return
      */
     @Override
-    public AnnouncementsVO getAnnouncementsVO(Announcements announcements, HttpServletRequest request) {
+    public AnnouncementsVO getAnnouncementsVO(Announcements announcements) {
         // 对象转封装类
         AnnouncementsVO announcementsVO = AnnouncementsVO.objToVo(announcements);
 

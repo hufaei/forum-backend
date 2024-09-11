@@ -14,8 +14,6 @@ import com.lisan.forumbackend.model.vo.CommentsVO;
 import com.lisan.forumbackend.service.CommentsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -33,15 +31,10 @@ public class CommentsController {
 
     @Resource
     private CommentsService commentsService;
-    @Autowired
-    private RedisTemplate redisTemplate;
 
     /**
      * 创建评论表
      *
-     * @param commentsAddRequest
-     * @param request
-     * @return
      */
     @PostMapping("/add")
     public BaseResponse<Long> addComments(@RequestBody CommentsAddRequest commentsAddRequest, HttpServletRequest request) {

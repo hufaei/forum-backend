@@ -16,6 +16,8 @@ import com.lisan.forumbackend.model.vo.AnnouncementsVO;
 import com.lisan.forumbackend.service.AnnouncementsService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -40,19 +42,15 @@ public class AnnouncementsController {
     private AnnouncementsService announcementsService;
     @Autowired
     private RedisTemplate redisTemplate;
-
+    @Resource
+    private RedissonClient redissonClient;
 
     // Redis 缓存键
     private static final String ANNOUNCEMENTS_CACHE_KEY = "announcement:latest";
-    // Redis 缓存过期时间：15天
+    private static final String ANNOUNCEMENTS_LOCK_KEY = "lock:announcements";
+    // 过期时间
     private static final long EXPIRATION = 15L * 24 * 60 * 60; // 15天，单位为秒
 
-    /**
-     * 创建通告表
-     * 仅管理员身份可用
-     * @param announcementsAddRequest
-     * @return
-     */
     @PostMapping("/add")
     public BaseResponse<Long> addAnnouncements(@RequestBody AnnouncementsAddRequest announcementsAddRequest) {
 
@@ -60,33 +58,41 @@ public class AnnouncementsController {
         StpUtil.checkRole("ADMIN");
         ThrowUtils.throwIf(announcementsAddRequest == null, ErrorCode.PARAMS_ERROR);
 
-        // DTO 转换 实体类
-        Announcements announcements = new Announcements();
-        BeanUtils.copyProperties(announcementsAddRequest, announcements);
+        // 同一个锁名--互斥
+        RLock lock = redissonClient.getLock(ANNOUNCEMENTS_LOCK_KEY);
+        try {
+            // 获取锁，超时时间为 10 秒，锁自动释放时间为 5 秒
+            if (lock.tryLock(10, 5, TimeUnit.SECONDS)) {
 
-        // 数据校验
-        announcementsService.validAnnouncements(announcements);
+                // DTO 转换 实体类
+                Announcements announcements = new Announcements();
+                BeanUtils.copyProperties(announcementsAddRequest, announcements);
 
-        // 写入数据库
-        announcements.setIsDelete(0);
-        boolean result = announcementsService.save(announcements);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+                // 数据校验
+                announcementsService.validAnnouncements(announcements);
 
-        // 成功添加后，删除缓存
-        redisTemplate.delete(ANNOUNCEMENTS_CACHE_KEY);
+                // 写入数据库
+                announcements.setIsDelete(0);
+                boolean result = announcementsService.save(announcements);
+                ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
 
-        // 返回新写入的数据 id
-        long newAnnouncementsId = announcements.getId();
-        return ResultUtils.success(newAnnouncementsId);
+                // 成功添加后，删除缓存
+                redisTemplate.delete(ANNOUNCEMENTS_CACHE_KEY);
+
+                // 返回新写入的数据 id
+                long newAnnouncementsId = announcements.getId();
+                return ResultUtils.success(newAnnouncementsId);
+            } else {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统繁忙，请稍后再试");
+            }
+        } catch (InterruptedException e) {
+            log.error("获取锁失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统繁忙，请稍后再试");
+        } finally {
+            lock.unlock();
+        }
     }
 
-    /**
-     * 删除通告表
-     * 仅管理员可删除
-     * @param deleteRequest
-     * @param request
-     * @return
-     */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteAnnouncements(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
 
@@ -97,22 +103,37 @@ public class AnnouncementsController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
-        long id = deleteRequest.getId();
+        RLock lock = redissonClient.getLock(ANNOUNCEMENTS_LOCK_KEY);
+        try {
+            if (lock.tryLock(10, 5, TimeUnit.SECONDS)) {
 
-        // 判断是否存在
-        Announcements oldAnnouncements = announcementsService.getById(id);
-        ThrowUtils.throwIf(oldAnnouncements == null, ErrorCode.NOT_FOUND_ERROR);
+                long id = deleteRequest.getId();
 
-        // 操作数据库
-        boolean result = announcementsService.removeById(id);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+                // 判断是否存在
+                Announcements oldAnnouncements = announcementsService.getById(id);
+                ThrowUtils.throwIf(oldAnnouncements == null, ErrorCode.NOT_FOUND_ERROR);
 
-        redisTemplate.delete(ANNOUNCEMENTS_CACHE_KEY);
-        return ResultUtils.success(true);
+                // 操作数据库
+                boolean result = announcementsService.removeById(id);
+                ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+
+                // 删除成功后，删除缓存
+                redisTemplate.delete(ANNOUNCEMENTS_CACHE_KEY);
+
+                return ResultUtils.success(true);
+            } else {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统繁忙，请稍后再试");
+            }
+        } catch (InterruptedException e) {
+            log.error("获取锁失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统繁忙，请稍后再试");
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
-     * 更新通告表（仅管理员可用）
+     * 更新通告表（仅管理员可用--大概不会用）
      * @param announcementsUpdateRequest
      * @return
      */
@@ -160,61 +181,68 @@ public class AnnouncementsController {
         ThrowUtils.throwIf(announcements == null, ErrorCode.NOT_FOUND_ERROR);
 
         // 获取封装类
-        return ResultUtils.success(announcementsService.getAnnouncementsVO(announcements, request));
+        return ResultUtils.success(announcementsService.getAnnouncementsVO(announcements));
     }
 
     /**
-     * 分页获取通告表列表
-     *
+     * 分页查询最新三条数据
      * @param announcementsQueryRequest
-     * @return
+     * &#064;description 使用锁的同时，优先读取缓存，更新同时才介入锁，最多阻塞一个进程而获取到缓存
      */
     @PostMapping("/list/page")
-    public BaseResponse<Page<AnnouncementsVO>> listAnnouncementsByPage(@RequestBody AnnouncementsQueryRequest announcementsQueryRequest, HttpServletRequest request) {
-        // 从 Redis 获取缓存数据
-        List<AnnouncementsVO> cachedAnnouncements = (List<AnnouncementsVO>) redisTemplate.opsForValue().get(ANNOUNCEMENTS_CACHE_KEY);
+    public BaseResponse<Page<AnnouncementsVO>> listAnnouncementsByPage(@RequestBody AnnouncementsQueryRequest announcementsQueryRequest) {
 
+        List<AnnouncementsVO> cachedAnnouncements = (List<AnnouncementsVO>) redisTemplate.opsForValue().get(ANNOUNCEMENTS_CACHE_KEY);
         if (cachedAnnouncements != null) {
-            // 将缓存数据转换为分页对象并返回
             Page<AnnouncementsVO> cachedPage = new Page<>(1, cachedAnnouncements.size(), cachedAnnouncements.size());
             cachedPage.setRecords(cachedAnnouncements);
             return ResultUtils.success(cachedPage);
         }
 
-        long current = 1;
-        long size = 3;
+        // 获取分布式锁，确保在修改数据时不能读取
+        RLock lock = redissonClient.getLock(ANNOUNCEMENTS_LOCK_KEY);
+        try {
+            if (lock.tryLock(10, 5, TimeUnit.SECONDS)) {
 
-        // 判断是否为无条件查询
-        boolean isQueryAll = announcementsQueryRequest.getId() == null
-                && StringUtils.isBlank(announcementsQueryRequest.getSearchText())
-                && StringUtils.isBlank(announcementsQueryRequest.getSortField());
+                long current = 1;
+                long size = 3;
 
-        // 查询数据库
-        Page<Announcements> announcementsPage;
-        if (isQueryAll) {
-            announcementsPage = announcementsService.page(new Page<>(current, size));
-        } else {
-            announcementsPage = announcementsService.page(new Page<>(current, size), announcementsService.getQueryWrapper(announcementsQueryRequest));
+                // 判断是否为无条件查询
+                boolean isQueryAll = announcementsQueryRequest.getId() == null
+                        && StringUtils.isBlank(announcementsQueryRequest.getSearchText())
+                        && StringUtils.isBlank(announcementsQueryRequest.getSortField());
+
+                Page<Announcements> announcementsPage;
+                if (isQueryAll) {
+                    announcementsPage = announcementsService.page(new Page<>(current, size));
+                } else {
+                    announcementsPage = announcementsService.page(new Page<>(current, size), announcementsService.getQueryWrapper(announcementsQueryRequest));
+                }
+
+                // 转换为 AnnouncementsVO
+                List<AnnouncementsVO> announcementsVOList = announcementsPage.getRecords().stream()
+                        .map(announcement -> announcementsService.getAnnouncementsVO(announcement))
+                        .collect(Collectors.toList());
+
+                // 更新缓存
+                redisTemplate.opsForValue().set(ANNOUNCEMENTS_CACHE_KEY, announcementsVOList, EXPIRATION, TimeUnit.SECONDS);
+
+                Page<AnnouncementsVO> announcementsVOPage = new Page<>(current, size, announcementsPage.getTotal());
+                announcementsVOPage.setRecords(announcementsVOList);
+
+                return ResultUtils.success(announcementsVOPage);
+            } else {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统繁忙，请稍后再试");
+            }
+        } catch (InterruptedException e) {
+            log.error("获取锁失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统繁忙，请稍后再试");
+        } finally {
+            // 释放锁
+            lock.unlock();
         }
-
-        // 判断查询结果是否为空
-        if (announcementsPage == null || announcementsPage.getTotal() == 0) {
-            return ResultUtils.success(new Page<>());
-        }
-
-        // 转换为 AnnouncementsVO
-        List<AnnouncementsVO> announcementsVOList = announcementsPage.getRecords().stream()
-                .map(announcement -> announcementsService.getAnnouncementsVO(announcement, request))
-                .collect(Collectors.toList());
-
-        // 更新到Redis缓存
-        redisTemplate.opsForValue().set(ANNOUNCEMENTS_CACHE_KEY, announcementsVOList, EXPIRATION, TimeUnit.SECONDS);
-
-        // 构建返回的分页对象
-        Page<AnnouncementsVO> announcementsVOPage = new Page<>(current, size, announcementsPage.getTotal());
-        announcementsVOPage.setRecords(announcementsVOList);
-
-        return ResultUtils.success(announcementsVOPage);
     }
+
+
 
 }

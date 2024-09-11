@@ -6,8 +6,6 @@ import com.lisan.forumbackend.model.dto.announcements.AnnouncementsQueryRequest;
 import com.lisan.forumbackend.model.entity.Announcements;
 import com.lisan.forumbackend.model.vo.AnnouncementsVO;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * 通告表服务
  *
@@ -36,9 +34,8 @@ public interface AnnouncementsService extends IService<Announcements> {
      * 获取通告表封装
      *
      * @param announcements
-     * @param request
      * @return
      */
-    AnnouncementsVO getAnnouncementsVO(Announcements announcements, HttpServletRequest request);
+    AnnouncementsVO getAnnouncementsVO(Announcements announcements);
 
 }

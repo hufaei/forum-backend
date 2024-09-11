@@ -12,6 +12,8 @@ import com.lisan.forumbackend.model.entity.Sections;
 import com.lisan.forumbackend.model.vo.SectionsVO;
 import com.lisan.forumbackend.service.SectionsService;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 板块表接口
@@ -34,7 +37,8 @@ public class SectionsController {
     private SectionsService sectionsService;
     @Autowired
     private RedisTemplate redisTemplate;
-
+    @Resource
+    private RedissonClient redissonClient;
     // Redis 缓存键
     private static final String SECTION_KEY = "sections";
 
@@ -51,25 +55,41 @@ public class SectionsController {
         ThrowUtils.throwIf(sectionsAddRequest == null, ErrorCode.PARAMS_ERROR);
 
         StpUtil.checkLogin();
-
         StpUtil.checkRole("ADMIN");
 
-        // 实体类和 DTO 进行转换
-        Sections sections = new Sections();
-        BeanUtils.copyProperties(sectionsAddRequest, sections);
+        // 使用 Redisson 获取分布式锁
+        RLock lock = redissonClient.getLock(SECTION_KEY + ":lock");
+        try {
+            if (lock.tryLock(10, 5, TimeUnit.SECONDS)) {
 
-        // 数据校验
-        sectionsService.validSections(sections);
+                // 实体类和 DTO 进行转换
+                Sections sections = new Sections();
+                BeanUtils.copyProperties(sectionsAddRequest, sections);
 
-        boolean result = sectionsService.save(sections);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+                // 数据校验
+                sectionsService.validSections(sections);
 
-        // 成功添加后，删除缓存
-        redisTemplate.delete(SECTION_KEY);
+                // 保存数据
+                boolean result = sectionsService.save(sections);
+                ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
 
-        long newSectionsId = sections.getId();
-        return ResultUtils.success(newSectionsId);
+                // 成功添加后，删除缓存
+                redisTemplate.delete(SECTION_KEY);
+
+                long newSectionsId = sections.getId();
+                return ResultUtils.success(newSectionsId);
+            } else {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统繁忙，请稍后再试");
+            }
+        } catch (InterruptedException e) {
+            log.error("获取锁失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取锁失败");
+        } finally {
+            // 释放锁
+            lock.unlock();
+        }
     }
+
 
 
     /**
@@ -86,21 +106,37 @@ public class SectionsController {
         }
 
         StpUtil.checkLogin();
-
         StpUtil.checkRole("ADMIN");
 
-        long id = deleteRequest.getId();
-        // 判断是否存在
-        Sections oldSections = sectionsService.getById(id);
-        ThrowUtils.throwIf(oldSections == null, ErrorCode.NOT_FOUND_ERROR);
+        // 使用 Redisson 获取分布式锁
+        RLock lock = redissonClient.getLock(SECTION_KEY + ":lock");
+        try {
+            if (lock.tryLock(10, 5, TimeUnit.SECONDS)) {
 
-        // 操作数据库
-        boolean result = sectionsService.removeById(id);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-        // 成功添加后，删除缓存
-        redisTemplate.delete(SECTION_KEY);
-        return ResultUtils.success(true);
+                long id = deleteRequest.getId();
+                Sections oldSections = sectionsService.getById(id);
+                ThrowUtils.throwIf(oldSections == null, ErrorCode.NOT_FOUND_ERROR);
+
+                // 删除数据库数据
+                boolean result = sectionsService.removeById(id);
+                ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+
+                // 删除缓存
+                redisTemplate.delete(SECTION_KEY);
+
+                return ResultUtils.success(true);
+            } else {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统繁忙，请稍后再试");
+            }
+        } catch (InterruptedException e) {
+            log.error("获取锁失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取锁失败");
+        } finally {
+            // 释放锁
+            lock.unlock();
+        }
     }
+
 
     /**
      * 根据板块表列表（封装类）
@@ -109,19 +145,31 @@ public class SectionsController {
     @GetMapping("/all")
     public BaseResponse<List<SectionsVO>> getAllSections() {
 
-        // 从 Redis 获取缓存数据
         List<SectionsVO> cachedSections = (List<SectionsVO>) redisTemplate.opsForValue().get(SECTION_KEY);
 
         if (cachedSections != null) {
             return ResultUtils.success(cachedSections);
         }
-        // 查询所有板块信息
-        List<SectionsVO> sectionsVOList = sectionsService.getAllSections();
 
-        // 更新到Redis缓存
-        redisTemplate.opsForValue().set(SECTION_KEY, sectionsVOList);
+        RLock lock = redissonClient.getLock(SECTION_KEY + ":lock");
+        try {
+            if (lock.tryLock(10, 5, TimeUnit.SECONDS)) {
 
-        return ResultUtils.success(sectionsVOList);
+                List<SectionsVO> sectionsVOList = sectionsService.getAllSections();
+
+                redisTemplate.opsForValue().set(SECTION_KEY, sectionsVOList);
+
+                return ResultUtils.success(sectionsVOList);
+            } else {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "系统繁忙，请稍后再试");
+            }
+        } catch (InterruptedException e) {
+            log.error("获取锁失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取锁失败");
+        } finally {
+            lock.unlock();
+        }
     }
+
 
 }
