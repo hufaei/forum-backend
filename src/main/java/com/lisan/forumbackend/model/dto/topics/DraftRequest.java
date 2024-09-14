@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.List;
@@ -20,11 +22,11 @@ public class DraftRequest implements Serializable{
     private Long sectionId;
     @JsonProperty("imageUrls")
     private List<String> imageUrls;
-
+    // Initialize logger
+    private static final Logger logger = LoggerFactory.getLogger(DraftRequest.class);
     // tell me 咋解决这个问题啊我去了我也不想写这个但是json数据对不上
     // 带一个字符串参数的构造函数
     public DraftRequest(String jsonString) {
-
         try {
             // 替换中文逗号为英文逗号
             String correctedJsonString = jsonString.replace('，', ',');
@@ -38,7 +40,7 @@ public class DraftRequest implements Serializable{
             this.imageUrls = objectMapper.convertValue(rootNode.path("imageUrls"),
                     objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            logger.error("An exception occurred: {}", e.getMessage(), e);
             // 处理 JSON 解析异常
         }
     }

@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 板块表接口
- * @author lisan
+ * @author ぼつち
  */
 @RestController
 @RequestMapping("/sections")
@@ -35,7 +34,7 @@ public class SectionsController {
 
     @Resource
     private SectionsService sectionsService;
-    @Autowired
+    @Resource
     private RedisTemplate redisTemplate;
     @Resource
     private RedissonClient redissonClient;
@@ -46,9 +45,9 @@ public class SectionsController {
     /**
      * 创建板块表
      * 仅管理员可用
-     * @param sectionsAddRequest
-     * @param request
-     * @return
+     * @param sectionsAddRequest 板块请求数据
+     * @param request 网络请求
+     * @return Long
      */
     @PostMapping("/add")
     public BaseResponse<Long> addSections(@RequestBody SectionsAddRequest sectionsAddRequest, HttpServletRequest request) {
@@ -95,9 +94,9 @@ public class SectionsController {
     /**
      * 删除板块表（已完成--不可随便调用）
      * 仅管理员可用
-     * @param deleteRequest
-     * @param request
-     * @return
+     * @param deleteRequest 通用删除请求
+     * @param request 网络请求
+     * @return Boolean
      */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteSections(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
@@ -140,7 +139,7 @@ public class SectionsController {
 
     /**
      * 根据板块表列表（封装类）
-     * @return
+     * @return 板块视图列表
      */
     @GetMapping("/all")
     public BaseResponse<List<SectionsVO>> getAllSections() {

@@ -3,7 +3,6 @@ package com.lisan.forumbackend.model.dto.sections;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 编辑板块表请求

@@ -1,13 +1,10 @@
 package com.lisan.forumbackend.model.vo;
 
-import cn.hutool.json.JSONUtil;
 import com.lisan.forumbackend.model.entity.Sections;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
 
 /**
  * 板块表视图
@@ -37,7 +34,7 @@ public class SectionsVO implements Serializable {
     /**
      * 封装类转对象
      *
-     * @param sectionsVO
+     * @param sectionsVO 视图类
      * @return Sections
      */
     public static Sections voToObj(SectionsVO sectionsVO) {
@@ -52,7 +49,7 @@ public class SectionsVO implements Serializable {
     /**
      * 对象转封装类
      *
-     * @param sections
+     * @param sections 实体类
      * @return SectionsVO
      */
     public static SectionsVO objToVo(Sections sections) {

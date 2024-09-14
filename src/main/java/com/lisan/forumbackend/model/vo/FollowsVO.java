@@ -1,17 +1,13 @@
 package com.lisan.forumbackend.model.vo;
 
-import cn.hutool.json.JSONUtil;
 import com.lisan.forumbackend.model.entity.Follows;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
 
 /**
  * 关注表视图
- *
  * @author lisan
  *
  */
@@ -51,7 +47,7 @@ public class FollowsVO implements Serializable {
     /**
      * 封装类转对象
      *
-     * @param followsVO
+     * @param followsVO 视图类
      * @return Follows
      */
     public static Follows voToObj(FollowsVO followsVO) {
@@ -66,7 +62,7 @@ public class FollowsVO implements Serializable {
     /**
      * 对象转封装类
      *
-     * @param follows
+     * @param follows 实体类
      * @return FollowsVO
      */
     public static FollowsVO objToVo(Follows follows) {

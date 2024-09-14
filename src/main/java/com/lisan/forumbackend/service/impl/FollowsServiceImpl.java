@@ -1,35 +1,20 @@
 package com.lisan.forumbackend.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lisan.forumbackend.common.ErrorCode;
 import com.lisan.forumbackend.exception.ThrowUtils;
 import com.lisan.forumbackend.mapper.FollowsMapper;
 import com.lisan.forumbackend.mapper.UsersMapper;
-import com.lisan.forumbackend.model.dto.follows.FollowsQueryRequest;
 import com.lisan.forumbackend.model.entity.Follows;
-import com.lisan.forumbackend.model.entity.Sections;
 import com.lisan.forumbackend.model.entity.Users;
 import com.lisan.forumbackend.model.vo.FollowsVO;
 import com.lisan.forumbackend.service.FollowsService;
-import com.lisan.forumbackend.service.UsersService;
-import com.lisan.forumbackend.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -92,6 +77,17 @@ public class FollowsServiceImpl extends ServiceImpl<FollowsMapper, Follows> impl
 
         // 如果两个条件都满足，则表示互相关注
         return count1 > 0 && count2 > 0;
+    }
+
+
+
+    public List<Follows> getFollowersByUserId(Long followeeId) {
+        // 使用 MyBatis-Plus 的 QueryWrapper 构建查询条件
+        QueryWrapper<Follows> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("followee_id", followeeId);
+
+        // 执行查询并返回结果
+        return followsMapper.selectList(queryWrapper);
     }
 
 

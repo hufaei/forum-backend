@@ -1,11 +1,12 @@
 package com.lisan.forumbackend.common;
 
+import lombok.Getter;
+
 /**
  * 自定义错误码
- *
- * treay
- * 
+ * @author ぼつち
  */
+@Getter
 public enum ErrorCode {
 
     SUCCESS(200, "ok"),
@@ -30,14 +31,6 @@ public enum ErrorCode {
     ErrorCode(int code, String message) {
         this.code = code;
         this.message = message;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
     }
 
 }

@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 /**
  * 用户角色枚举
- *
  * ぼつち
  * 
  */

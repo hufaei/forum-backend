@@ -5,8 +5,8 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
+ * @author ぼつち
  * 通用返回类
- *
  * @param <T>
  */
 @Data

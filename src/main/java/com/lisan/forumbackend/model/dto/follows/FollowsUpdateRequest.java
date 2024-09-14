@@ -7,7 +7,6 @@ import java.util.List;
 
 /**
  * 更新关注表请求
- *
  * @author lisan
  *
  */

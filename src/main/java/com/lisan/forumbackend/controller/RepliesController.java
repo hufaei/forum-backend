@@ -12,16 +12,19 @@ import com.lisan.forumbackend.model.entity.Replies;
 import com.lisan.forumbackend.model.vo.RepliesVO;
 import com.lisan.forumbackend.service.RepliesService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
+
 /**
  * 回复表接口
- * @author lisan
+ * @author ぼつち
  */
 @RestController
 @RequestMapping("/replies")
@@ -31,15 +34,17 @@ public class RepliesController {
     @Resource
     private RepliesService repliesService;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
     /**
-     * 创建回复表
-     *
-     * @param repliesAddRequest
-     * @param request
-     * @return
+     * @author ぼつち
+     * 创建回复
+     * @param repliesAddRequest 回复添加数据请求
+     * @param request 网络请求
+     * @return LONG
      */
     @PostMapping("/add")
-    public BaseResponse<Long> addReplies(@RequestBody RepliesAddRequest repliesAddRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> addReplies(@RequestBody RepliesAddRequest repliesAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(repliesAddRequest == null, ErrorCode.PARAMS_ERROR);
         // 实体类和 DTO 进行转换
         Replies replies = new Replies();
@@ -49,20 +54,31 @@ public class RepliesController {
         // 写入登录用户id
         StpUtil.checkLogin();
         replies.setUserId(StpUtil.getLoginIdAsLong());
-        // 写入数据库
+        // 通过 RabbitMQ 发送评论消息到队列
+        rabbitTemplate.convertAndSend("replyExchange", "reply", replies);
+
+
+//        // 写入数据库
+//        boolean result = repliesService.save(replies);
+//        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+//        // 返回新写入的数据 id
+//        long newRepliesId = replies.getId();
+        // 保存回复到数据库
         boolean result = repliesService.save(replies);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-        // 返回新写入的数据 id
-        long newRepliesId = replies.getId();
-        return ResultUtils.success(newRepliesId);
+        if (result) {
+            log.info("回复保存成功: {}", replies.getId());
+        } else {
+            log.error("回复保存失败: {}", replies.getId());
+        }
+        return ResultUtils.success(true);
     }
 
     /**
+     * @author ぼつち
      * 删除回复表
-     *
-     * @param deleteRequest
-     * @param request
-     * @return
+     * @param deleteRequest 删除请求
+     * @param request 网络请求
+     * @return Boolean
      */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteReplies(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
@@ -89,6 +105,14 @@ public class RepliesController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
+
+    /**
+     * @author ぼつち
+     * 简明知意 通过id查询回复（管理员用）
+     * @param commentId 评论id
+     * @param request 网络请求
+     * @return 回复vo列表
+     */
 
     @GetMapping("/get/RepliesVo/{commentId}")
     public BaseResponse<List<RepliesVO>> getRepliesByCommentId(@PathVariable("commentId") Long commentId, HttpServletRequest request) {

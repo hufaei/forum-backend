@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
 
 /**
  * 回复表服务实现
- *
- * @author lisan
+ * 基本CDRU操作
+ * @author ぼつち
  *
  */
 @Service
@@ -37,8 +37,8 @@ public class RepliesServiceImpl extends ServiceImpl<RepliesMapper, Replies> impl
     private UsersMapper usersMapper;
     /**
      * 校验数据
-     *
-     * @param replies
+     * @author ぼつち
+     * @param replies 验证回复数据
      */
     @Override
     public void validReplies(Replies replies) {

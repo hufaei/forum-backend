@@ -12,11 +12,12 @@ import com.lisan.forumbackend.model.dto.topics.TopicsAddRequest;
 import com.lisan.forumbackend.model.entity.Topics;
 import com.lisan.forumbackend.model.enums.TuccEnum;
 import com.lisan.forumbackend.model.vo.TopicsVO;
-import com.lisan.forumbackend.service.CommentsService;
 import com.lisan.forumbackend.service.ImageService;
 import com.lisan.forumbackend.service.TopicsService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,8 +36,9 @@ public class TopicsController {
 
     @Resource
     private TopicsService topicsService;
-    @Resource
-    private CommentsService commentService;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
     @Resource
     private ImageService imageService;
 
@@ -54,7 +56,6 @@ public class TopicsController {
     }
 
     private TuccEnum getTuccEnumBySectionId(Long sectionId) {
-        // 根据 sectionId 返回对应的 TuccEnum
         if (sectionId == 1L) {
             return TuccEnum.SECTION_1;
         } else if (sectionId == 4L) {
@@ -76,7 +77,7 @@ public class TopicsController {
      * @return
      */
     @PostMapping("/add")
-    public BaseResponse<Long> addTopics(@RequestBody TopicsAddRequest topicsAddRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> addTopics(@RequestBody TopicsAddRequest topicsAddRequest, HttpServletRequest request) {
         // 确保用户已登录
         StpUtil.checkLogin();
 
@@ -97,13 +98,11 @@ public class TopicsController {
         String imageUrls = String.join(",", topicsAddRequest.getImage());
         topics.setImage(imageUrls);
 
-        // 写入数据库
-        boolean result = topicsService.save(topics);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        // 通过 RabbitMQ 发送评论消息到队列
+        rabbitTemplate.convertAndSend("topicExchange", "topic", topics);
 
-        // 返回新写入的数据 id
-        long newTopicsId = topics.getId();
-        return ResultUtils.success(newTopicsId);
+
+        return ResultUtils.success(true);
     }
 
     /**
@@ -151,6 +150,7 @@ public class TopicsController {
      @GetMapping("/get/TopicsVo/{sectionId}/{current}")
      public BaseResponse<List<TopicsVO>> getTopicsVOBySid(@PathVariable("sectionId") Long sectionId,@PathVariable("current") int current, HttpServletRequest request) {
          ThrowUtils.throwIf(sectionId == null || sectionId <= 0, ErrorCode.PARAMS_ERROR);
+
          TopicPagesRequest topicPagesRequest = new TopicPagesRequest();
          topicPagesRequest.setSectionId(sectionId);
          topicPagesRequest.setCurrent(current);
@@ -162,8 +162,6 @@ public class TopicsController {
     /**
      * 根据 topic_id 获取话题表（封装类）
      * @param topicId
-     *
-     *
      * @return
      */
     @GetMapping("/get/TopicVo/{topicId}")
@@ -194,5 +192,11 @@ public class TopicsController {
         return ResultUtils.success(topicsVOList);
     }
 
-
+    @GetMapping("/thumb/{topicId}")
+    public  BaseResponse<Boolean> thumbTopicById(@PathVariable("topicId") Long topicId) {
+        // 参数校验
+        ThrowUtils.throwIf(topicId == null || topicId <= 0, ErrorCode.PARAMS_ERROR);
+        rabbitTemplate.convertAndSend("thumbExchange", "thumb",topicId );
+        return  ResultUtils.success(true);
+    }
 }

@@ -1,13 +1,11 @@
 package com.lisan.forumbackend.model.vo;
 
-import cn.hutool.json.JSONUtil;
 import com.lisan.forumbackend.model.entity.Topics;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 话题表视图
@@ -51,8 +49,8 @@ public class TopicsVO implements Serializable {
     /**
      * 封装类转对象
      *
-     * @param topicsVO
-     * @return
+     * @param topicsVO 视图类
+     * @return 实体类
      */
     public static Topics voToObj(TopicsVO topicsVO) {
         if (topicsVO == null) {
@@ -66,8 +64,8 @@ public class TopicsVO implements Serializable {
     /**
      * 对象转封装类
      *
-     * @param topics
-     * @return
+     * @param topics 实体类
+     * @return 视图类
      */
     public static TopicsVO objToVo(Topics topics) {
         if (topics == null) {

@@ -1,13 +1,11 @@
 package com.lisan.forumbackend.model.vo;
 
-import cn.hutool.json.JSONUtil;
 import com.lisan.forumbackend.model.entity.Replies;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 回复表视图
@@ -47,7 +45,7 @@ public class RepliesVO implements Serializable {
     /**
      * 封装类转对象
      *
-     * @param repliesVO
+     * @param repliesVO 视图类
      * @return Replies
      */
     public static Replies voToObj(RepliesVO repliesVO) {
@@ -62,7 +60,7 @@ public class RepliesVO implements Serializable {
     /**
      * 对象转封装类
      *
-     * @param replies
+     * @param replies 实体类
      * @return RepliesVO
      */
     public static RepliesVO objToVo(Replies replies) {

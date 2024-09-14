@@ -1,13 +1,11 @@
 package com.lisan.forumbackend.model.vo;
 
-import cn.hutool.json.JSONUtil;
 import com.lisan.forumbackend.model.entity.Comments;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 评论表视图
@@ -46,7 +44,7 @@ public class CommentsVO implements Serializable {
     /**
      * 封装类转对象
      *
-     * @param commentsVO
+     * @param commentsVO 视图类
      * @return Comments
      */
     public static Comments voToObj(CommentsVO commentsVO) {
@@ -61,7 +59,7 @@ public class CommentsVO implements Serializable {
     /**
      * 对象转封装类
      *
-     * @param comments
+     * @param comments 实体类
      * @return CommentsVO
      */
     public static CommentsVO objToVo(Comments comments) {

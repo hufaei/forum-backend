@@ -7,7 +7,6 @@ import com.lisan.forumbackend.exception.ThrowUtils;
 import com.lisan.forumbackend.mapper.AnnouncementsMapper;
 import com.lisan.forumbackend.model.dto.announcements.AnnouncementsQueryRequest;
 import com.lisan.forumbackend.model.entity.Announcements;
-import com.lisan.forumbackend.model.vo.AnnouncementsVO;
 import com.lisan.forumbackend.service.AnnouncementsService;
 import com.lisan.forumbackend.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 
 /**
  * 通告表服务实现
@@ -27,12 +25,10 @@ import javax.annotation.Resource;
 @Slf4j
 public class AnnouncementsServiceImpl extends ServiceImpl<AnnouncementsMapper, Announcements> implements AnnouncementsService {
 
-    @Resource
-    private AnnouncementsMapper announcementsMapper;
 
     /**
      * 添加时校验数据--add
-     * @param announcements
+     * @param announcements 实体类数据
      */
     @Override
     public void validAnnouncements(Announcements announcements) {
@@ -46,35 +42,10 @@ public class AnnouncementsServiceImpl extends ServiceImpl<AnnouncementsMapper, A
             ThrowUtils.throwIf(content.length() > 200, ErrorCode.PARAMS_ERROR, "内容过长");
         }
     }
-    /**
-     * 获取通告表封装
-     *
-     * @param announcements
-     * @return
-     */
-    @Override
-    public AnnouncementsVO getAnnouncementsVO(Announcements announcements) {
-        // 对象转封装类
-        AnnouncementsVO announcementsVO = AnnouncementsVO.objToVo(announcements);
 
-        Long id = announcementsVO.getId();
-        String title = announcementsVO.getTitle();
-        String content = announcementsVO.getContent();
-        // 判空
-        if (id == null) {
-            ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR, "不存在的信息");
-        }
-        ThrowUtils.throwIf(StringUtils.isEmpty(title), ErrorCode.PARAMS_ERROR, "未读取到信息");
-        ThrowUtils.throwIf(StringUtils.isEmpty(content), ErrorCode.PARAMS_ERROR, "未读取到信息");
-
-        return announcementsVO;
-    }
 
     /**
      * 获取查询条件
-     *
-     * @param announcementsQueryRequest
-     * @return
      */
     @Override
     public QueryWrapper<Announcements> getQueryWrapper(AnnouncementsQueryRequest announcementsQueryRequest) {
@@ -99,7 +70,6 @@ public class AnnouncementsServiceImpl extends ServiceImpl<AnnouncementsMapper, A
             }
 
 //      排序规则
-//      排序字段按照实体类或者sql表的名称均可
         queryWrapper.orderBy(SqlUtils.validSortField(sortField),
                 sortOrder.equals("ascend"),
                 sortField);

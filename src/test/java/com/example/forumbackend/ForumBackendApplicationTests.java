@@ -2,16 +2,11 @@ package com.example.forumbackend;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lisan.forumbackend.model.entity.Announcements;
 import com.lisan.forumbackend.service.AnnouncementsService;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.test.context.ContextConfiguration;
 
 import javax.annotation.Resource;
 
@@ -25,6 +20,7 @@ class ForumBackendApplicationTests {
     //自动String序列化
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
     @Test
     void contextLoads() {
         // 创建分页对象

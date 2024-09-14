@@ -1,14 +1,9 @@
 package com.lisan.forumbackend.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.lisan.forumbackend.model.dto.follows.FollowsQueryRequest;
 import com.lisan.forumbackend.model.entity.Follows;
 import com.lisan.forumbackend.model.vo.FollowsVO;
-import org.springframework.context.annotation.Scope;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -34,6 +29,8 @@ public interface FollowsService extends IService<Follows> {
     List<FollowsVO> getFollowsVO(Long userId);
 
     boolean isMutualFollow(Long followerid, Long followeeid);
+
+    List<Follows> getFollowersByUserId(Long topicCreatorId);
 
 //    /**
 //     * 获取查询条件

@@ -19,7 +19,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,13 +39,14 @@ public class AnnouncementsController {
 
     @Resource
     private AnnouncementsService announcementsService;
-    @Autowired
+    @Resource
     private RedisTemplate redisTemplate;
     @Resource
     private RedissonClient redissonClient;
 
     // Redis 缓存键
     private static final String ANNOUNCEMENTS_CACHE_KEY = "announcement:latest";
+    // Redisson 锁键
     private static final String ANNOUNCEMENTS_LOCK_KEY = "lock:announcements";
     // 过期时间
     private static final long EXPIRATION = 15L * 24 * 60 * 60; // 15天，单位为秒
@@ -76,7 +76,7 @@ public class AnnouncementsController {
                 boolean result = announcementsService.save(announcements);
                 ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
 
-                // 成功添加后，删除缓存
+                // 缓存Aside写法
                 redisTemplate.delete(ANNOUNCEMENTS_CACHE_KEY);
 
                 // 返回新写入的数据 id
@@ -134,8 +134,8 @@ public class AnnouncementsController {
 
     /**
      * 更新通告表（仅管理员可用--大概不会用）
-     * @param announcementsUpdateRequest
-     * @return
+     * @param announcementsUpdateRequest 通告表请求数据
+     * @return Boolean
      */
     @PostMapping("/update")
     public BaseResponse<Boolean> updateAnnouncements(@RequestBody AnnouncementsUpdateRequest announcementsUpdateRequest) {
@@ -169,9 +169,9 @@ public class AnnouncementsController {
 
     /**
      * 根据 id 获取通告表视图
-     * 暂无用
-     * @param id
-     * @return
+     * @author ぼつち
+     * @param id 评论id
+     * @return AnnouncementsVO
      */
     @GetMapping("/get/vo")
     public BaseResponse<AnnouncementsVO> getAnnouncementsVOById(Long id, HttpServletRequest request) {
@@ -181,13 +181,14 @@ public class AnnouncementsController {
         ThrowUtils.throwIf(announcements == null, ErrorCode.NOT_FOUND_ERROR);
 
         // 获取封装类
-        return ResultUtils.success(announcementsService.getAnnouncementsVO(announcements));
+        return ResultUtils.success(AnnouncementsVO.objToVo(announcements));
     }
 
     /**
+     * @author ぼつち
      * 分页查询最新三条数据
-     * @param announcementsQueryRequest
-     * &#064;description 使用锁的同时，优先读取缓存，更新同时才介入锁，最多阻塞一个进程而获取到缓存
+     * @param announcementsQueryRequest 通告查询请求数据结构
+     * &#064;description  使用锁的同时，优先读取缓存，更新同时才介入锁，最多阻塞一个进程而获取到缓存
      */
     @PostMapping("/list/page")
     public BaseResponse<Page<AnnouncementsVO>> listAnnouncementsByPage(@RequestBody AnnouncementsQueryRequest announcementsQueryRequest) {
@@ -221,7 +222,7 @@ public class AnnouncementsController {
 
                 // 转换为 AnnouncementsVO
                 List<AnnouncementsVO> announcementsVOList = announcementsPage.getRecords().stream()
-                        .map(announcement -> announcementsService.getAnnouncementsVO(announcement))
+                        .map(AnnouncementsVO::objToVo)
                         .collect(Collectors.toList());
 
                 // 更新缓存

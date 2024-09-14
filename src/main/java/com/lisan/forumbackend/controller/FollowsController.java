@@ -13,8 +13,6 @@ import com.lisan.forumbackend.model.vo.FollowsVO;
 import com.lisan.forumbackend.service.FollowsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -32,10 +30,7 @@ public class FollowsController {
 
     @Resource
     private FollowsService followsService;
-    @Autowired
-    private RedisTemplate redisTemplate;
 
-    // region 增删改查
 
     @PostMapping("/toggle")
     public BaseResponse<Boolean> toggleFollows(@RequestBody FollowsAddRequest followsAddRequest, HttpServletRequest request) {
@@ -73,10 +68,10 @@ public class FollowsController {
     }
 
     /**
+     * @author ぼつち
      * 根据 用户id 获取关注表（封装类）
-     *
-     * @param userId
-     * @return
+     * @param userId 用户id
+     * @return List
      */
     @GetMapping("/get/vo/{userId}")
     public BaseResponse<List<FollowsVO>> getFollowsVOById(@PathVariable("userId") Long userId, HttpServletRequest request) {

@@ -1,13 +1,11 @@
 package com.lisan.forumbackend.model.vo;
 
-import cn.hutool.json.JSONUtil;
 import com.lisan.forumbackend.model.entity.Announcements;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 通告表视图
@@ -42,7 +40,7 @@ public class AnnouncementsVO implements Serializable {
     /**
      * 封装类转对象
      *
-     * @param announcementsVO
+     * @param announcementsVO 视图类
      * @return Announcements
      */
     public static Announcements voToObj(AnnouncementsVO announcementsVO) {
@@ -57,7 +55,7 @@ public class AnnouncementsVO implements Serializable {
     /**
      * 对象转封装类
      *
-     * @param announcements
+     * @param announcements 实体类
      * @return AnnouncementsVO
      */
     public static AnnouncementsVO objToVo(Announcements announcements) {

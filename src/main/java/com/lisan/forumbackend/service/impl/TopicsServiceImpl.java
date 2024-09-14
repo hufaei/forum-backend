@@ -1,6 +1,7 @@
 package com.lisan.forumbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lisan.forumbackend.common.ErrorCode;
@@ -14,13 +15,11 @@ import com.lisan.forumbackend.model.entity.Comments;
 import com.lisan.forumbackend.model.entity.Sections;
 import com.lisan.forumbackend.model.entity.Topics;
 import com.lisan.forumbackend.model.entity.Users;
-import com.lisan.forumbackend.model.vo.CommentsVO;
 import com.lisan.forumbackend.model.vo.TopicsVO;
 import com.lisan.forumbackend.service.CommentsService;
 import com.lisan.forumbackend.service.TopicsService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -28,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +50,26 @@ public class TopicsServiceImpl extends ServiceImpl<TopicsMapper, Topics> impleme
     private RedisTemplate redisTemplate;
     @Autowired
     private UsersMapper usersMapper;
+
+    /**
+     * 分页获取发布话题数量最多的用户
+     * @param current 当前页码
+     * @param size 每页大小
+     * @return IPage 分页结果
+     */
+    public IPage<Map<String, Object>> getTopUsersByTopicCount(int current, int size) {
+        // 创建分页对象
+        Page<Map<String, Object>> page = new Page<>(current, size);
+
+        // 构建查询条件
+        QueryWrapper<Topics> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("user_id", "COUNT(*) AS topic_count")  // 使用 COUNT 统计每个用户的发布话题数量
+                .groupBy("user_id")  // 按用户分组
+                .orderByDesc("topic_count");  // 按话题数量降序排列
+
+        // 分页查询
+        return topicsMapper.selectMapsPage(page, queryWrapper);
+    }
     /**
      * 校验数据
      *

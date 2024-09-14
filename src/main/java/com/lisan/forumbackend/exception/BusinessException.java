@@ -1,13 +1,14 @@
 package com.lisan.forumbackend.exception;
 
 import com.lisan.forumbackend.common.ErrorCode;
+import lombok.Getter;
 
 /**
  * 自定义异常类
- *
- * treay
+ * @author ぼつち
  * 
  */
+@Getter
 public class BusinessException extends RuntimeException {
 
     /**
@@ -30,7 +31,4 @@ public class BusinessException extends RuntimeException {
         this.code = errorCode.getCode();
     }
 
-    public int getCode() {
-        return code;
-    }
 }

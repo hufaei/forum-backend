@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lisan.forumbackend.model.dto.announcements.AnnouncementsQueryRequest;
 import com.lisan.forumbackend.model.entity.Announcements;
-import com.lisan.forumbackend.model.vo.AnnouncementsVO;
 
 /**
  * 通告表服务
@@ -30,12 +29,5 @@ public interface AnnouncementsService extends IService<Announcements> {
      */
     QueryWrapper<Announcements> getQueryWrapper(AnnouncementsQueryRequest announcementsQueryRequest);
 
-    /**
-     * 获取通告表封装
-     *
-     * @param announcements
-     * @return
-     */
-    AnnouncementsVO getAnnouncementsVO(Announcements announcements);
 
 }

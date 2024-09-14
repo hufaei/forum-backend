@@ -3,7 +3,6 @@ package com.lisan.forumbackend.model.dto.comments;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 更新评论表请求

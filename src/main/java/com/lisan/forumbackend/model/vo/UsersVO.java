@@ -1,14 +1,11 @@
 package com.lisan.forumbackend.model.vo;
 
-import cn.hutool.json.JSONUtil;
 import com.lisan.forumbackend.model.entity.Users;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
-
 /**
  * 用户表视图
  *
@@ -56,7 +53,7 @@ public class UsersVO implements Serializable {
     /**
      * 封装类转对象
      *
-     * @param usersVO
+     * @param usersVO 视图类
      * @return Users
      */
     public static Users voToObj(UsersVO usersVO) {
@@ -71,7 +68,7 @@ public class UsersVO implements Serializable {
     /**
      * 对象转封装类
      *
-     * @param users
+     * @param users 实体类
      * @return UsersVO
      */
     public static UsersVO objToVo(Users users) {

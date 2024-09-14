@@ -1,5 +1,6 @@
 package com.lisan.forumbackend.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lisan.forumbackend.model.dto.topics.TopicPagesRequest;
 import com.lisan.forumbackend.model.entity.Topics;
@@ -7,6 +8,7 @@ import com.lisan.forumbackend.model.vo.TopicsVO;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 话题表服务
@@ -41,4 +43,5 @@ public interface TopicsService extends IService<Topics> {
     TopicsVO getTopicsVOById(Long topicId);
 
 
+    IPage<Map<String, Object>> getTopUsersByTopicCount(int current, int size);
 }

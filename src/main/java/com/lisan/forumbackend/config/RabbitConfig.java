@@ -22,15 +22,23 @@ public class RabbitConfig implements RabbitTemplate.ConfirmCallback,RabbitTempla
     }
 
     @Override
-    public void confirm(CorrelationData correlationData, boolean b, String s) {
-        // 发送到队列成功调用
-
+    public void confirm(CorrelationData correlationData, boolean ack, String cause) {
+        if (ack) {
+            log.info("消息成功发送到交换机。correlationData: {}", correlationData);
+        } else {
+            log.error("消息发送到交换机失败。原因: {}", cause);
+        }
     }
 
     @Override
     public void returnedMessage(ReturnedMessage returnedMessage) {
-        // 发送失败调用
-
+        log.error("消息从交换机路由到队列失败。message: {}, replyCode: {}, replyText: {}, exchange: {}, routingKey: {}",
+                returnedMessage.getMessage(),
+                returnedMessage.getReplyCode(),
+                returnedMessage.getReplyText(),
+                returnedMessage.getExchange(),
+                returnedMessage.getRoutingKey());
     }
+
 
 }

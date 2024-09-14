@@ -1,11 +1,8 @@
 package com.lisan.forumbackend.model.dto.follows;
 
-import com.lisan.forumbackend.common.PageRequest;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 查询关注表请求

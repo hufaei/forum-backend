@@ -3,7 +3,6 @@ package com.lisan.forumbackend.model.dto.follows;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 创建关注表请求

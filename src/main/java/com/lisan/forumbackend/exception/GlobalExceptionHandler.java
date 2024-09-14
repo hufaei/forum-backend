@@ -13,8 +13,7 @@ import static com.lisan.forumbackend.common.ErrorCode.NOT_LOGIN_ERROR;
 
 /**
  * 全局异常处理器
- *
- * treay
+ * @author ぼつち
  * 
  */
 @RestControllerAdvice

@@ -1,10 +1,13 @@
 package com.lisan.forumbackend.model.enums;
 
+import lombok.Getter;
+
 /**
  * 图床数据枚举
  * Enum for handling Tucc data such as avatar ID, board IDs, upload URL, and token.
  * @author ぼつち
  */
+@Getter
 public enum TuccEnum {
 
     AVATAR_ID(2767),
@@ -20,7 +23,4 @@ public enum TuccEnum {
         this.value = value;
     }
 
-    public Object getValue() {
-        return value;
-    }
 }

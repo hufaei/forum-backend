@@ -1,8 +1,6 @@
 package com.lisan.forumbackend.model.dto.users;
 
-import com.lisan.forumbackend.common.PageRequest;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 
