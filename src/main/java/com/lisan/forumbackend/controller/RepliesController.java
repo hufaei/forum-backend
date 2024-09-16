@@ -58,18 +58,11 @@ public class RepliesController {
         rabbitTemplate.convertAndSend("replyExchange", "reply", replies);
 
 
-//        // 写入数据库
-//        boolean result = repliesService.save(replies);
-//        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        // 写入数据库
+        boolean result = repliesService.save(replies);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
 //        // 返回新写入的数据 id
 //        long newRepliesId = replies.getId();
-        // 保存回复到数据库
-        boolean result = repliesService.save(replies);
-        if (result) {
-            log.info("回复保存成功: {}", replies.getId());
-        } else {
-            log.error("回复保存失败: {}", replies.getId());
-        }
         return ResultUtils.success(true);
     }
 

@@ -131,6 +131,10 @@ public class TopicsServiceImpl extends ServiceImpl<TopicsMapper, Topics> impleme
                     if (section != null) {
                         topicsVO.setSectionName(section.getName());
                     }
+                    // 从Redis获取点赞数
+                    Object thumbsCount = redisTemplate.opsForValue().get("topic:thumbs:" + topics.getId());
+                    // 如果点赞数是Integer，则转换为Long，否则赋值为0L
+                    topicsVO.setThumbs(thumbsCount instanceof Integer ? Long.valueOf((Integer) thumbsCount) : 0L);
                     return topicsVO;
                 })
                 .collect(Collectors.toList());

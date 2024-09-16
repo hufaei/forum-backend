@@ -16,7 +16,10 @@ public enum ErrorCode {
     NOT_FOUND_ERROR(403, "请求数据不存在"),
     FORBIDDEN_ERROR(404, "禁止访问"),
     SYSTEM_ERROR(500, "系统内部异常"),
-    OPERATION_ERROR(501, "操作失败");
+    OPERATION_ERROR(501, "操作失败"),
+    EMAIL_ERROR(600, "邮箱不存在"),
+    CODE_ERROR(601, "验证码错误"),
+    INVALIDECODE_ERROR(601, "验证码失效");
 
     /**
      * 状态码

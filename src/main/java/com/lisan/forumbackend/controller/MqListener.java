@@ -1,7 +1,10 @@
 package com.lisan.forumbackend.controller;
 
 import com.lisan.forumbackend.model.entity.*;
-import com.lisan.forumbackend.service.*;
+import com.lisan.forumbackend.service.CommentsService;
+import com.lisan.forumbackend.service.FollowsService;
+import com.lisan.forumbackend.service.TopicsService;
+import com.lisan.forumbackend.service.UsersService;
 import io.goeasy.GoEasy;
 import io.goeasy.publish.GoEasyError;
 import io.goeasy.publish.PublishListener;
@@ -31,8 +34,6 @@ public class MqListener {
     private RedisTemplate redisTemplate;
     @Resource
     private FollowsService followsService;
-    @Resource
-    private RepliesService repliesService;
     //GoEasy Java SDK需升级至0.4.2以上
     private final GoEasy goEasy = new GoEasy("http://rest-hz.goeasy.io","BC-3daf9f10c85a43279b82415993224f65");
 

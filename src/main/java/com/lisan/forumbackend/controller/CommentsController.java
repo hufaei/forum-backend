@@ -64,19 +64,16 @@ public class CommentsController {
         // 数据校验
         commentsService.validComments(comments);
         comments.setUserId(StpUtil.getLoginIdAsLong());  // 获取用户 ID
+
         // 保存评论到数据库
         boolean result = commentsService.save(comments);
-        if (result) {
-            log.info("评论保存成功: {}", comments.getId());
-        } else {
-            log.error("评论保存失败: {}", comments.getId());
-        }
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
 
         // 通过 RabbitMQ 发送评论消息到队列
         rabbitTemplate.convertAndSend("commentExchange", "comment", comments);
 
         // 返回成功提示信息，评论的保存将由 RabbitMQ 异步处理
-        return ResultUtils.success(true);  // 假设前端根据此返回值展示“评论提交成功”
+        return ResultUtils.success(true);
     }
 
     /**

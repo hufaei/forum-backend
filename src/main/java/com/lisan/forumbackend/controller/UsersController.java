@@ -1,6 +1,7 @@
 package com.lisan.forumbackend.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lisan.forumbackend.common.BaseResponse;
 import com.lisan.forumbackend.common.ErrorCode;
 import com.lisan.forumbackend.common.ResultUtils;
@@ -13,16 +14,20 @@ import com.lisan.forumbackend.model.entity.Users;
 import com.lisan.forumbackend.model.enums.TuccEnum;
 import com.lisan.forumbackend.model.vo.UsersVO;
 import com.lisan.forumbackend.service.ImageService;
+import com.lisan.forumbackend.service.RedisEmailCodeService;
 import com.lisan.forumbackend.service.TopicsService;
 import com.lisan.forumbackend.service.UsersService;
+import com.lisan.forumbackend.utils.EmailUtils;
+import com.lisan.forumbackend.utils.ValidateCodeUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
@@ -46,6 +51,8 @@ public class UsersController {
     private TopicsService topicsService;
     @Resource
     private ImageService imageService;
+    @Resource
+    private RedisEmailCodeService redisEmailCodeService;
     
 
     /**
@@ -168,7 +175,6 @@ public class UsersController {
         }
 
         StpUtil.checkLogin();
-
         //传入update-request时不指定id，根据token直接设置为用户登录id
         usersUpdateRequest.setId(StpUtil.getLoginIdAsLong());
 
@@ -329,15 +335,77 @@ public class UsersController {
 
         return ResultUtils.success(onlineUsers);
     }
-    @Scheduled(cron = "0 0 * * * ?")  // 每小时执行一次
-    public void cleanInvalidTokens() {
-        List<String> tokenList = StpUtil.searchTokenValue("", 0, 1000, true);
-        for (String tokenEntry : tokenList) {
-            String tokenValue = tokenEntry.replace("satoken:login:token:", "");
-            if (StpUtil.getLoginIdByToken(tokenValue) == null) {
-                StpUtil.logoutByTokenValue(tokenValue);  // 清理无效 token
-            }
-        }
-    }
+//    @Scheduled(cron = "0 0 * * * ?")  // 每小时执行一次
+//    public void cleanInvalidTokens() {
+//        List<String> tokenList = StpUtil.searchTokenValue("", 0, 1000, true);
+//        for (String tokenEntry : tokenList) {
+//            String tokenValue = tokenEntry.replace("satoken:login:token:", "");
+//            if (StpUtil.getLoginIdByToken(tokenValue) == null) {
+//                StpUtil.logoutByTokenValue(tokenValue);  // 清理无效 token
+//            }
+//        }
+//    }
+    @PostMapping("/sendEmail/{email}")
+    public BaseResponse<Boolean> sendEmail(@PathVariable("email") String email) throws MessagingException {
+        Integer authCode = ValidateCodeUtils.generateValidateCode(4);
+        EmailUtils.sendEmail(email, String.valueOf(authCode));
 
+        // 存储验证码到Redis，5分钟过期
+        redisEmailCodeService.saveAuthCode(email, String.valueOf(authCode));
+        return ResultUtils.success(true);
+    }
+    @PostMapping("/verifyCode")
+    public BaseResponse<Boolean> verifyCode(@RequestBody Map<String, String> requestBody) {
+        String email = requestBody.get("email");
+        String code = requestBody.get("code");
+
+        // 从Redis中获取验证码
+        String redisCode = redisEmailCodeService.getAuthCode(email);
+        if (redisCode == null) {
+            return ResultUtils.error(ErrorCode.INVALIDECODE_ERROR);
+        }
+
+        // 验证验证码是否正确
+        if (!redisCode.equals(code)) {
+            // 验证后删除验证码，防止重复使用
+            redisEmailCodeService.deleteAuthCode(email);
+            return ResultUtils.error(ErrorCode.CODE_ERROR);
+        }
+        // 验证后删除验证码，防止重复使用
+        redisEmailCodeService.deleteAuthCode(email);
+
+
+        return ResultUtils.success(true);
+    }
+    @PostMapping("/verifyEmail/{email}")
+    public BaseResponse<Boolean> verifyEmail(@PathVariable("email") String email) {
+         // 检查邮箱是否存在
+        QueryWrapper<Users> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("email", email);
+        Users user = usersService.getOne(queryWrapper);
+        if (user == null) {
+            return ResultUtils.error(ErrorCode.EMAIL_ERROR);
+        }
+
+        return ResultUtils.success(true);
+    }
+    @PostMapping("/changePassword")
+    public BaseResponse<Boolean> changePwd(@RequestBody Map<String, String> requestBody) {
+        String username = requestBody.get("email");
+        String password = requestBody.get("password");
+        // 检查邮箱是否存在
+        QueryWrapper<Users> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("email", username);
+        Users user = usersService.getOne(queryWrapper);
+        if (user == null) {
+            return ResultUtils.error(ErrorCode.EMAIL_ERROR);
+        }
+        // 每次改密码应该换盐值？
+        String salt = user.getSalt();
+        String encryptedPwd = DigestUtils.md5Hex(password + salt);
+        user.setPassword(encryptedPwd);
+
+        usersService.updateById(user);
+        return ResultUtils.success(true);
+    }
 }

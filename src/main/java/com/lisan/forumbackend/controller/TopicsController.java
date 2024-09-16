@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,6 +42,8 @@ public class TopicsController {
     private RabbitTemplate rabbitTemplate;
     @Resource
     private ImageService imageService;
+    @Resource
+    private RedisTemplate redisTemplate;
 
     @PostMapping("/uploadImages")
     public BaseResponse<String> uploadImages(@RequestParam("file") MultipartFile files, @RequestParam("sectionId") Long sectionId) {
@@ -174,6 +177,9 @@ public class TopicsController {
 
         // 校验返回结果
         ThrowUtils.throwIf(topicsVO == null, ErrorCode.NOT_FOUND_ERROR);
+
+        Integer thumbsCount = (Integer) redisTemplate.opsForValue().get("topic:thumbs:" + topicId);
+        topicsVO.setThumbs(thumbsCount != null ? Long.valueOf(thumbsCount) : 0L);
 
         // 返回封装类
         return ResultUtils.success(topicsVO);

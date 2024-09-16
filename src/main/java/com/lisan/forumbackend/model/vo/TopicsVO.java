@@ -25,7 +25,10 @@ public class TopicsVO implements Serializable {
      * 发起者用户id
      */
     private Long userId;
-
+    /**
+     * 點贊數
+     */
+    private Long thumbs;
     /**
      * 板块图片附件
      */

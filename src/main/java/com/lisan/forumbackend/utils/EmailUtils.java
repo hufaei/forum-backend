@@ -23,9 +23,9 @@ public class EmailUtils {
         //端口号，QQ邮箱端口587
         props.put("mail.smtp.port", "587");
         // 此处填写，写信人的账号
-        props.put("mail.user", "1679924491@qq.com");
+        props.put("mail.user", "2857655149@qq.com");
         // 此处填写16位STMP口令(授权码)
-        props.put("mail.password", "jyljhbuvzxdeejcg");
+        props.put("mail.password", "xcdnbsybxqgcddai");
 
         // 构建授权信息，用于进行SMTP进行身份验证
         Authenticator authenticator = new Authenticator() {
@@ -47,9 +47,9 @@ public class EmailUtils {
         InternetAddress to = new InternetAddress(email);
         message.setRecipient(Message.RecipientType.TO, to);
         // 设置邮件标题
-        message.setSubject("ShareSwing---学习资源分享平台");
+        message.setSubject("lisan test");
         // 设置邮件的内容体
-        message.setContent("【ShareSwing---学习资源分享平台】您好，您的验证码为："+authCode+"，请在5分钟内使用", "text/html;charset=UTF-8");
+        message.setContent("【lisanSchool】您好，您的验证码为："+authCode+"，请在2分钟内使用", "text/html;charset=UTF-8");
         Transport.send(message);
     }
 
