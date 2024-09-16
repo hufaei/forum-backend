@@ -245,7 +245,7 @@ public class UsersController {
      * @param size 每页显示的数据条数
      * @return BaseResponse 分页结果
      */
-    @GetMapping("/top-users")
+    @GetMapping("/topUsers")
     public BaseResponse<List<Map<String, Object>>> getTopUsersByTopicCount(
             @RequestParam(value = "current", defaultValue = "1") int current,
             @RequestParam(value = "size", defaultValue = "5") int size) {

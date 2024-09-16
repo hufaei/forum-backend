@@ -150,7 +150,7 @@ public class TopicsController {
      * @param sectionId
      * @return
      */
-     @GetMapping("/get/TopicsVo/{sectionId}/{current}")
+     @GetMapping("/get/topicsVo/{sectionId}/{current}")
      public BaseResponse<List<TopicsVO>> getTopicsVOBySid(@PathVariable("sectionId") Long sectionId,@PathVariable("current") int current, HttpServletRequest request) {
          ThrowUtils.throwIf(sectionId == null || sectionId <= 0, ErrorCode.PARAMS_ERROR);
 
@@ -167,7 +167,7 @@ public class TopicsController {
      * @param topicId
      * @return
      */
-    @GetMapping("/get/TopicVo/{topicId}")
+    @GetMapping("/get/topicVo/{topicId}")
     public BaseResponse<TopicsVO> getTopicsVOByTid(@PathVariable("topicId") Long topicId, HttpServletRequest request) {
         // 参数校验
         ThrowUtils.throwIf(topicId == null || topicId <= 0, ErrorCode.PARAMS_ERROR);
@@ -190,7 +190,7 @@ public class TopicsController {
      * @param request
      * @return
      */
-    @GetMapping("/get/TopicsVoByUserId/{userId}")
+    @GetMapping("/get/topicsVoByUserId/{userId}")
     public BaseResponse<List<TopicsVO>> getTopicsVOByUserId(@PathVariable("userId") Long userId, HttpServletRequest request) {
         ThrowUtils.throwIf(userId == null || userId <= 0, ErrorCode.PARAMS_ERROR);
         // 查询数据库

@@ -107,7 +107,7 @@ public class RepliesController {
      * @return 回复vo列表
      */
 
-    @GetMapping("/get/RepliesVo/{commentId}")
+    @GetMapping("/get/repliesVo/{commentId}")
     public BaseResponse<List<RepliesVO>> getRepliesByCommentId(@PathVariable("commentId") Long commentId, HttpServletRequest request) {
         ThrowUtils.throwIf(commentId == null || commentId <= 0, ErrorCode.PARAMS_ERROR);
         // 查询数据库

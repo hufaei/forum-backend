@@ -19,7 +19,7 @@ public enum ErrorCode {
     OPERATION_ERROR(501, "操作失败"),
     EMAIL_ERROR(600, "邮箱不存在"),
     CODE_ERROR(601, "验证码错误"),
-    INVALIDECODE_ERROR(601, "验证码失效");
+    INVALIDECODE_ERROR(602, "验证码失效");
 
     /**
      * 状态码

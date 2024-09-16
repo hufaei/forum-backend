@@ -117,7 +117,7 @@ public class CommentsController {
      * @param request 网络请求
      * @return List
      */
-    @GetMapping("/get/CommentsVo/{topicId}/{current}")
+    @GetMapping("/get/commentsVo/{topicId}/{current}")
     public BaseResponse<List<CommentsVO>> getCommentsByTopicId(@PathVariable("topicId") Long topicId, @PathVariable("current") int current, HttpServletRequest request) {
         ThrowUtils.throwIf(topicId == null || topicId <= 0, ErrorCode.PARAMS_ERROR);
         CommentPagesRequest commentPagesRequest = new CommentPagesRequest();
