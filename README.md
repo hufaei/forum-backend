@@ -66,6 +66,103 @@
 - ***使用图床：本项目中使用了[图仓](https://tucang.cc/#/login?redirect=/home/dashboard),其api暴露较少，若需更多功能（删除图片等等也不是不能用但是需要自行解析网址使用的api，我尝试使用但是感觉较为繁琐，所以功能只有上传）-- 也可自行修改图床以及其相关代码***</br>
 ***<h6>此文件只针对后端的部署，前端的部署使用详见其README.md文件</h6>***
 ### 关于项目：
+- 默认开启了打印sql语句，全局代码只使用了plus自带的基础语句，[SQL创建文件](docx/SQL.txt)
+- mq队列交换机和队列请看Listener文件手动创建或者Config中配置初始化
+- 分布式锁主要应用于通知和板块表的修改过程-管理员操作过程中保障redis不被读取到，最多阻塞一个进程去保存redis缓存
+- 消息队列用于发布订阅模式下的goeasy-websocket消息通知，以及话题出差农户过程以及提前返回前端响应让后端额外处理通知过程
+- 对于修改密码过程的请求体数据未明确定义结构，而是广泛定义了map取值（临时添加完成的功能）
+### `sections` 表
+
+| 列名         | 数据类型   | 描述          |
+|--------------|------------|---------------|
+| `id`         | BIGINT(20) | 板块ID        |
+| `name`       | VARCHAR(255) | 板块名称      |
+| `description`| TEXT       | 板块描述      |
+| `created_at` | DATETIME   | 创建时间      |
+| `updated_at` | DATETIME   | 更新时间      |
+
+---
+
+### `users` 表
+
+| 列名         | 数据类型   | 描述          |
+|--------------|------------|---------------|
+| `id`         | BIGINT(20) | 用户ID        |
+| `nickname`   | VARCHAR(255) | 昵称          |
+| `username`   | VARCHAR(255) | 用户名        |
+| `password`   | VARCHAR(255) | 密码          |
+| `salt`       | VARCHAR(255) | 盐值加密      |
+| `email`      | VARCHAR(255) | 邮箱          |
+| `avatar`     | VARCHAR(255) | 头像URL      |
+| `role`       | VARCHAR(50)  | 角色，USER为普通用户，ADMIN为管理员 |
+| `isDelete`   | INT(11)      | 删除标志，0为未删除，1为已删除 |
+| `created_at` | DATETIME   | 创建时间      |
+| `updated_at` | DATETIME   | 更新时间      |
+| `self_intro` | TEXT       | 自我介绍      |
+
+---
+
+### `topics` 表
+
+| 列名         | 数据类型   | 描述          |
+|--------------|------------|---------------|
+| `id`         | BIGINT(20) | 话题ID        |
+| `section_id` | BIGINT(20) | 所属板块ID    |
+| `user_id`    | BIGINT(20) | 发布用户ID    |
+| `content`    | TEXT       | 话题内容      |
+| `image`      | VARCHAR(255) | 图片URL      |
+| `created_at` | DATETIME   | 创建时间      |
+| `updated_at` | DATETIME   | 更新时间      |
+
+---
+
+### `comments` 表
+
+| 列名         | 数据类型   | 描述          |
+|--------------|------------|---------------|
+| `id`         | BIGINT(20) | 评论ID        |
+| `topic_id`   | BIGINT(20) | 所属话题ID    |
+| `user_id`    | BIGINT(20) | 评论用户ID    |
+| `content`    | TEXT       | 评论内容      |
+| `created_at` | DATETIME   | 创建时间      |
+| `updated_at` | DATETIME   | 更新时间      |
+
+---
+
+### `replies` 表
+
+| 列名         | 数据类型   | 描述          |
+|--------------|------------|---------------|
+| `id`         | BIGINT(20) | 回复ID        |
+| `comment_id` | BIGINT(20) | 所属评论ID    |
+| `user_id`    | BIGINT(20) | 回复用户ID    |
+| `content`    | TEXT       | 回复内容      |
+| `created_at` | DATETIME   | 创建时间      |
+| `updated_at` | DATETIME   | 更新时间      |
+
+---
+
+### `follows` 表
+
+| 列名         | 数据类型   | 描述          |
+|--------------|------------|---------------|
+| `id`         | BIGINT(20) | 关注ID        |
+| `follower_id`| BIGINT(20) | 关注者ID      |
+| `followee_id`| BIGINT(20) | 被关注者ID    |
+| `created_at` | DATETIME   | 创建时间      |
+
+---
+
+### `announcements` 表
+
+| 列名         | 数据类型   | 描述          |
+|--------------|------------|---------------|
+| `id`         | BIGINT(20) | 通告ID        |
+| `title`      | VARCHAR(255) | 通告标题      |
+| `content`    | TEXT       | 通告内容      |
+| `isDelete`   | INT(11)      | 删除标志，0为未删除，1为已删除 |
+| `created_at` | DATETIME   | 创建时间      |
+| `updated_at` | DATETIME   | 更新时间      |
 
 ### 致谢
 
