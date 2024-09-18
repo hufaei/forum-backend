@@ -153,7 +153,12 @@ public class SectionsController {
         RLock lock = redissonClient.getLock(SECTION_KEY + ":lock");
         try {
             if (lock.tryLock(10, 5, TimeUnit.SECONDS)) {
+                // 双重缓存检查
+                List<SectionsVO> cachedSectionTwice = (List<SectionsVO>) redisTemplate.opsForValue().get(SECTION_KEY);
 
+                if (cachedSectionTwice != null) {
+                    return ResultUtils.success(cachedSectionTwice);
+                }
                 List<SectionsVO> sectionsVOList = sectionsService.getAllSections();
 
                 redisTemplate.opsForValue().set(SECTION_KEY, sectionsVOList);

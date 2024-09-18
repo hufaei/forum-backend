@@ -209,7 +209,13 @@ public class AnnouncementsController {
 
                 long current = 1;
                 long size = 3;
-
+                // 双重缓存检查
+                List<AnnouncementsVO> cachedAnnouncementTwice = (List<AnnouncementsVO>) redisTemplate.opsForValue().get(ANNOUNCEMENTS_CACHE_KEY);
+                if (cachedAnnouncementTwice != null) {
+                    Page<AnnouncementsVO> cachedPageTwice = new Page<>(1, cachedAnnouncementTwice.size(), cachedAnnouncementTwice.size());
+                    cachedPageTwice.setRecords(cachedAnnouncementTwice);
+                    return ResultUtils.success(cachedPageTwice);
+                }
                 // 判断是否为无条件查询
                 boolean isQueryAll = announcementsQueryRequest.getId() == null
                         && StringUtils.isBlank(announcementsQueryRequest.getSearchText())
