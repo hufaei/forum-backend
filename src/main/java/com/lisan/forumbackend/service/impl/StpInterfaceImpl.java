@@ -27,7 +27,7 @@ public class StpInterfaceImpl implements StpInterface {
         List<String> roles = new ArrayList<>();
         if (loginId != null) {
             QueryWrapper<Users> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("id", loginId);
+            queryWrapper.select("id","role").eq("id", loginId);
             Users user = usersMapper.selectOne(queryWrapper);
             if (user != null) {
                 String role = user.getRole();

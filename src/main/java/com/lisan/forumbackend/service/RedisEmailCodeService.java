@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 对邮箱验证码的一系列操作
+ */
 @Service
 public class RedisEmailCodeService {
 

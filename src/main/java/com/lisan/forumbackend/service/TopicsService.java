@@ -20,23 +20,19 @@ public interface TopicsService extends IService<Topics> {
 
     /**
      * 校验数据
-     *
-     * @param topics
+     * @param topics 话题实体类
      */
     void validTopics(Topics topics);
     boolean removeById(Serializable id);
 
     /**
      * 根据 userId 获取话题表（封装类）
-     * @param userId
-     * @return
+     * @param userId 用户id
      */
     List<TopicsVO> getTopicsVOByUserId(Long userId);
     /**
      * 获取话题表封装
-     *
-     * @param topicPagesRequest
-     * @return
+     * @param topicPagesRequest 话题页面请求数据
      */
     List<TopicsVO> getTopicsVOBySectionId(TopicPagesRequest topicPagesRequest);
 

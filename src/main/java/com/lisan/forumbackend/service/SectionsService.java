@@ -18,20 +18,18 @@ public interface SectionsService extends IService<Sections> {
     /**
      * 校验数据
      *
-     * @param sections
+     * @param sections 板块实体类
      */
     void validSections(Sections sections);
 
     /**
      * 查询所有板块名称(视图层)
-     * @return
      */
     List<SectionsVO> getAllSections();
 
     /**
      * 通过id删除指定板块
-     * @param id
-     * @return
+     * @param id 板块id
      */
     boolean removeById(Serializable id);
 }

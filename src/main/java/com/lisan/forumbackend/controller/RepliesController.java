@@ -1,6 +1,7 @@
 package com.lisan.forumbackend.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lisan.forumbackend.common.BaseResponse;
 import com.lisan.forumbackend.common.DeleteRequest;
 import com.lisan.forumbackend.common.ErrorCode;
@@ -85,13 +86,18 @@ public class RepliesController {
 
         long id = deleteRequest.getId();
         // 判断是否存在
-        Replies oldReplies = repliesService.getById(id);
+        QueryWrapper<Replies> queryWrapper = new QueryWrapper<>();
+        // 选择需要的字段
+        queryWrapper.select("id")
+                .eq("id", id)
+                .eq("isDelete", 0); // 确保只查询未删除的记录
+        Replies oldReplies = repliesService.getOne(queryWrapper);
         ThrowUtils.throwIf(oldReplies == null, ErrorCode.NOT_FOUND_ERROR);
 
         // 根据用户角色判断权限
-        if (!StpUtil.hasRole("ADMIN") && oldReplies.getUserId() != currentUserId) {
-            ThrowUtils.throwIf(true, ErrorCode.NO_AUTH_ERROR);
-        }
+
+        ThrowUtils.throwIf(!StpUtil.hasRole("ADMIN") && oldReplies.getUserId() != currentUserId, ErrorCode.NO_AUTH_ERROR);
+
 
         // 操作数据库
         boolean result = repliesService.removeById(id);

@@ -1,6 +1,7 @@
 package com.lisan.forumbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lisan.forumbackend.common.ErrorCode;
 import com.lisan.forumbackend.exception.BusinessException;
@@ -19,10 +20,9 @@ import com.lisan.forumbackend.service.RepliesService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
 import javax.annotation.Resource;
 import java.io.Serializable;
 import java.util.List;
@@ -43,13 +43,11 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments> i
     @Autowired
     private RepliesService repliesService;
     @Autowired
-    private RedisTemplate redisTemplate;
-    @Autowired
     private UsersMapper usersMapper;
     /**
      * 校验数据
      *
-     * @param comments
+     * @param comments 评论实体类
      */
     @Override
     public void validComments(Comments comments) {
@@ -94,7 +92,11 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments> i
     public List<CommentsVO> getCommentsByTopicId(CommentPagesRequest commentPagesRequest) {
         // 检查 topicId 是否存在
         Long topicId = commentPagesRequest.getTopicId();
-        Topics topic = topicsMapper.selectById(topicId);
+        QueryWrapper<Topics> existWrapper = new QueryWrapper<>();
+        // 选择需要的字段
+        existWrapper.select("id")
+                .eq("id", topicId);
+        Topics topic = topicsMapper.selectOne(existWrapper);
         ThrowUtils.throwIf(topic == null, ErrorCode.NOT_FOUND_ERROR);
 
         // 设置默认加载页面大小

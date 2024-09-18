@@ -16,15 +16,12 @@ public interface FollowsService extends IService<Follows> {
 
     /**
      * 校验数据
-     *
-     * @param follows
+     * @param follows 关注实体类
      */
     void validFollows(Follows follows);
     /**
      * 获取关注表封装
-     *
-     * @param userId
-     * @return
+     * @param userId 用户id
      */
     List<FollowsVO> getFollowsVO(Long userId);
 

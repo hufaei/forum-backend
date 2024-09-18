@@ -1,6 +1,7 @@
 package com.lisan.forumbackend.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lisan.forumbackend.common.BaseResponse;
 import com.lisan.forumbackend.common.DeleteRequest;
@@ -54,7 +55,6 @@ public class AnnouncementsController {
     @PostMapping("/add")
     public BaseResponse<Long> addAnnouncements(@RequestBody AnnouncementsAddRequest announcementsAddRequest) {
 
-        StpUtil.checkLogin();
         StpUtil.checkRole("ADMIN");
         ThrowUtils.throwIf(announcementsAddRequest == null, ErrorCode.PARAMS_ERROR);
 
@@ -96,7 +96,6 @@ public class AnnouncementsController {
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteAnnouncements(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
 
-        StpUtil.checkLogin();
         StpUtil.checkRole("ADMIN");
 
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
@@ -177,9 +176,12 @@ public class AnnouncementsController {
     public BaseResponse<AnnouncementsVO> getAnnouncementsVOById(Long id, HttpServletRequest request) {
         ThrowUtils.throwIf(id == null || id <= 0, ErrorCode.PARAMS_ERROR);
         // 查询数据库
-        Announcements announcements = announcementsService.getById(id);
-        ThrowUtils.throwIf(announcements == null, ErrorCode.NOT_FOUND_ERROR);
 
+        QueryWrapper<Announcements> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id", "title", "content", "updated_at")
+                .eq("id", id)
+                .eq("isDelete", 0); // 确保只查询未删除的记录
+        Announcements announcements = announcementsService.getOne(queryWrapper);
         // 获取封装类
         return ResultUtils.success(AnnouncementsVO.objToVo(announcements));
     }
@@ -188,7 +190,7 @@ public class AnnouncementsController {
      * @author ぼつち
      * 分页查询最新三条数据
      * @param announcementsQueryRequest 通告查询请求数据结构
-     * &#064;description  使用锁的同时，优先读取缓存，更新同时才介入锁，最多阻塞一个进程而获取到缓存
+     * &#064;description  使用锁的同时，优先读取缓存，更新同时才介入锁，最多阻塞一个那一时刻并发进程而获取到缓存
      */
     @PostMapping("/list/page")
     public BaseResponse<Page<AnnouncementsVO>> listAnnouncementsByPage(@RequestBody AnnouncementsQueryRequest announcementsQueryRequest) {
@@ -215,9 +217,9 @@ public class AnnouncementsController {
 
                 Page<Announcements> announcementsPage;
                 if (isQueryAll) {
-                    announcementsPage = announcementsService.page(new Page<>(current, size));
+                    announcementsPage = announcementsService.page(new Page<>(current, size, false));
                 } else {
-                    announcementsPage = announcementsService.page(new Page<>(current, size), announcementsService.getQueryWrapper(announcementsQueryRequest));
+                    announcementsPage = announcementsService.page(new Page<>(current, size, false), announcementsService.getQueryWrapper(announcementsQueryRequest));
                 }
 
                 // 转换为 AnnouncementsVO

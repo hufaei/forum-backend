@@ -60,7 +60,12 @@ public class RepliesServiceImpl extends ServiceImpl<RepliesMapper, Replies> impl
     @Override
     public List<RepliesVO> getRepliesByCommentId(Long commentId) {
         // 检查commentId是否存在
-        Comments comment = commentsMapper.selectById(commentId);
+        QueryWrapper<Comments> existWrapper = new QueryWrapper<>();
+        // 选择需要的字段
+        existWrapper.select("id")
+                .eq("id", commentId);
+        Comments comment = commentsMapper.selectOne(existWrapper);
+
         ThrowUtils.throwIf(comment == null, ErrorCode.NOT_FOUND_ERROR);
 
         // 查询该评论下的所有回复

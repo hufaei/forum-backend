@@ -8,7 +8,6 @@ import com.lisan.forumbackend.exception.BusinessException;
 import com.lisan.forumbackend.exception.ThrowUtils;
 import com.lisan.forumbackend.mapper.UsersMapper;
 import com.lisan.forumbackend.model.dto.users.UsersLoginRequest;
-import com.lisan.forumbackend.model.dto.users.UsersPagesRequest;
 import com.lisan.forumbackend.model.entity.Follows;
 import com.lisan.forumbackend.model.entity.Topics;
 import com.lisan.forumbackend.model.entity.Users;
@@ -20,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,8 +41,6 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
     @Resource
     private UsersMapper usersMapper;
     @Autowired
-    private RedisTemplate redisTemplate;
-    @Autowired
     private TopicsService topicsService;
     @Autowired
     private FollowsService followsService;
@@ -52,8 +48,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
 
     /**
      * 校验数据
-     *
-     * @param users
+     * @param users 用户实体
      */
     @Override
     public Users validUsers(Users users) {
@@ -109,7 +104,6 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
         if (users.getSelf_intro() != null) {
             newUser.setSelf_intro(users.getSelf_intro());
         }
-        // todo 获取当前登录用户的ID并且设置新的用户ID为已登录用户的ID
 
 
         newUser.setId(users.getId());
@@ -142,33 +136,24 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
         // 使用MD5和盐值加密密码的逻辑
         return DigestUtils.md5Hex(password + salt);
     }
-    /**
-     * 获取查询条件
-     *
-     * @param usersPagesRequest
-     * @return
-     */
-    @Override
-    public QueryWrapper<Users> getQueryWrapper(UsersPagesRequest usersPagesRequest) {
-        QueryWrapper<Users> queryWrapper = new QueryWrapper<>();
-        if (usersPagesRequest == null) {
-            return queryWrapper;
-        }
-        // 从对象中取值
-        Long id = usersPagesRequest.getId();
-        String sortField = usersPagesRequest.getSortField();
-        String sortOrder = usersPagesRequest.getSortOrder();
-        // todo 补充需要的查询条件
 
-        return queryWrapper;
-    }
+//    @Override
+//    public QueryWrapper<Users> getQueryWrapper(UsersPagesRequest usersPagesRequest) {
+//        QueryWrapper<Users> queryWrapper = new QueryWrapper<>();
+//        if (usersPagesRequest == null) {
+//            return queryWrapper;
+//        }
+//        // 从对象中取值
+//        Long id = usersPagesRequest.getId();
+//        String sortField = usersPagesRequest.getSortField();
+//        String sortOrder = usersPagesRequest.getSortOrder();
+
+//
+//        return queryWrapper;
+//    }
 
     /**
      * 获取用户表封装
-     *
-     * @param users
-     * @param request
-     * @return
      */
     @Override
     public UsersVO getUsersVO(Users users, HttpServletRequest request) {
@@ -213,7 +198,6 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
         if (!userRemoved) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR);
         }
-        redisTemplate.opsForValue().set("deleted_user:" + id, id);
 
         return true;
     }

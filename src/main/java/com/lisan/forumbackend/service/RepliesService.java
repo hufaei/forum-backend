@@ -16,9 +16,7 @@ public interface RepliesService extends IService<Replies> {
 
     /**
      * 校验数据
-     *
-     * @param replies
-
+     * @param replies 回复实体类
      */
     void validReplies(Replies replies);
 

@@ -11,10 +11,10 @@ public class ValidateCodeUtils {
      * 随机生成验证码
      *
      * @param length 长度为4位或者6位
-     * @return
+     * @return Integer
      */
     public static Integer generateValidateCode(int length) {
-        Integer code = null;
+        Integer code;
         if (length == 4) {
             //生成随机数，最大为9999
             code = new Random().nextInt(9999);
@@ -40,12 +40,11 @@ public class ValidateCodeUtils {
      * 随机生成指定长度字符串验证码
      *
      * @param length 长度
-     * @return
+     * @return String
      */
     public static String generateValidateCode4String(int length) {
         Random rdm = new Random();
         String hash1 = Integer.toHexString(rdm.nextInt());
-        String capstr = hash1.substring(0, length);
-        return capstr;
+        return hash1.substring(0, length);
     }
 }

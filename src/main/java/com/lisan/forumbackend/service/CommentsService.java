@@ -18,8 +18,7 @@ public interface CommentsService extends IService<Comments> {
 
     /**
      * 校验数据
-     *
-     * @param comments
+     * @param comments 评论实体类
      */
     void validComments(Comments comments);
 

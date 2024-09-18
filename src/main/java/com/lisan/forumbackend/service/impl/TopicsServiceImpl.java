@@ -73,7 +73,7 @@ public class TopicsServiceImpl extends ServiceImpl<TopicsMapper, Topics> impleme
     /**
      * 校验数据
      *
-     * @param topics
+     * @param topics 话题实体
      */
     @Override
     public void validTopics(Topics topics) {
@@ -104,7 +104,6 @@ public class TopicsServiceImpl extends ServiceImpl<TopicsMapper, Topics> impleme
         for (Comments comment : comments) {
             // 删除评论表中的记录
             commentsService.removeById(comment.getId());
-            redisTemplate.opsForValue().set("deleted_comment:"+comment.getId(),comment.getId());
         }
         // 删除话题记录
         boolean topicRemoved = super.removeById(id);
@@ -117,7 +116,12 @@ public class TopicsServiceImpl extends ServiceImpl<TopicsMapper, Topics> impleme
     @Override
     public List<TopicsVO> getTopicsVOByUserId(Long userId) {
         // 检查用户是否存在
-        Users user = usersMapper.selectById(userId);
+        QueryWrapper<Users> existWrapper = new QueryWrapper<>();
+        // 选择需要的字段
+        existWrapper.select("id")
+                .eq("id", userId)
+                .eq("isDelete", 0); // 确保只查询未删除的记录
+        Users user = usersMapper.selectOne(existWrapper);
         ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
 
         // 查询该用户下的所有话题
@@ -133,7 +137,6 @@ public class TopicsServiceImpl extends ServiceImpl<TopicsMapper, Topics> impleme
                     }
                     // 从Redis获取点赞数
                     Object thumbsCount = redisTemplate.opsForValue().get("topic:thumbs:" + topics.getId());
-                    // 如果点赞数是Integer，则转换为Long，否则赋值为0L
                     topicsVO.setThumbs(thumbsCount instanceof Integer ? Long.valueOf((Integer) thumbsCount) : 0L);
                     return topicsVO;
                 })

@@ -17,15 +17,14 @@ public interface AnnouncementsService extends IService<Announcements> {
     /**
      * 校验数据
      *
-     * @param announcements
+     * @param announcements 通告实体类
      */
     void validAnnouncements(Announcements announcements);
 
     /**
      * 获取查询条件
      *
-     * @param announcementsQueryRequest
-     * @return
+     * @param announcementsQueryRequest 通告查询类
      */
     QueryWrapper<Announcements> getQueryWrapper(AnnouncementsQueryRequest announcementsQueryRequest);
 

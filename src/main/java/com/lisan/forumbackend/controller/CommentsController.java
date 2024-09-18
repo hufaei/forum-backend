@@ -1,6 +1,7 @@
 package com.lisan.forumbackend.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lisan.forumbackend.common.BaseResponse;
 import com.lisan.forumbackend.common.DeleteRequest;
 import com.lisan.forumbackend.common.ErrorCode;
@@ -92,7 +93,13 @@ public class CommentsController {
 
         long id = deleteRequest.getId();
         // 判断是否存在
-        Comments oldComments = commentsService.getById(id);
+
+        QueryWrapper<Comments> queryWrapper = new QueryWrapper<>();
+        // 选择需要的字段
+        queryWrapper.select("id")
+                .eq("id", id)
+                .eq("isDelete", 0); // 确保只查询未删除的记录
+        Comments oldComments = commentsService.getOne(queryWrapper);
         ThrowUtils.throwIf(oldComments == null, ErrorCode.NOT_FOUND_ERROR);
 
         long currentUserId = StpUtil.getLoginIdAsLong();
@@ -154,8 +161,8 @@ public class CommentsController {
         if (topTopics != null && !topTopics.isEmpty()) {
             for (ZSetOperations.TypedTuple<Object> topic : topTopics) {
                 Map<String, Object> record = new HashMap<>();
-                record.put("topicId", topic.getValue().toString());  // 获取 topicId
-                record.put("viewCount", topic.getScore().longValue());  // 获取浏览量（分数）
+                record.put("topicId", Objects.requireNonNull(topic.getValue()).toString());  // 获取 topicId
+                record.put("viewCount", Objects.requireNonNull(topic.getScore()).longValue());  // 获取浏览量（分数）
                 result.add(record);
             }
         }
