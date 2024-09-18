@@ -1,0 +1,89 @@
+-- 创建板块表
+CREATE TABLE `sections` (
+    `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '板块ID',
+    `name` VARCHAR(255) NOT NULL COMMENT '板块名称',
+    `description` TEXT NOT NULL COMMENT '板块描述',
+    `created_at` DATETIME NOT NULL COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL COMMENT '更新时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 创建用户表
+CREATE TABLE `users` (
+    `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '用户ID',
+    `nickname` VARCHAR(255) NOT NULL COMMENT '昵称',
+    `username` VARCHAR(255) NOT NULL COMMENT '用户名',
+    `password` VARCHAR(255) NOT NULL COMMENT '密码',
+    `salt` VARCHAR(255) NOT NULL COMMENT '盐值加密',
+    `email` VARCHAR(255) NOT NULL COMMENT '邮箱',
+    `avatar` VARCHAR(255) COMMENT '头像URL',
+    `role` VARCHAR(50) NOT NULL COMMENT '角色，USER为普通用户，ADMIN为管理员',
+    `isDelete` INT(11) NOT NULL DEFAULT 0 COMMENT '删除标志，0为未删除，1为已删除',
+    `created_at` DATETIME NOT NULL COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL COMMENT '更新时间',
+    `self_intro` TEXT COMMENT '自我介绍',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 创建话题表
+CREATE TABLE `topics` (
+    `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '话题ID',
+    `section_id` BIGINT(20) NOT NULL COMMENT '所属板块ID',
+    `user_id` BIGINT(20) NOT NULL COMMENT '发布用户ID',
+    `content` TEXT NOT NULL COMMENT '话题内容',
+    `image` VARCHAR(255) COMMENT '图片URL',
+    `created_at` DATETIME NOT NULL COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`section_id`) REFERENCES `sections` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 创建评论表
+CREATE TABLE `comments` (
+    `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '评论ID',
+    `topic_id` BIGINT(20) NOT NULL COMMENT '所属话题ID',
+    `user_id` BIGINT(20) NOT NULL COMMENT '评论用户ID',
+    `content` TEXT NOT NULL COMMENT '评论内容',
+    `created_at` DATETIME NOT NULL COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`topic_id`) REFERENCES `topics` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 创建回复表
+CREATE TABLE `replies` (
+    `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '回复ID',
+    `comment_id` BIGINT(20) NOT NULL COMMENT '所属评论ID',
+    `user_id` BIGINT(20) NOT NULL COMMENT '回复用户ID',
+    `content` TEXT NOT NULL COMMENT '回复内容',
+    `created_at` DATETIME NOT NULL COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`comment_id`) REFERENCES `comments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 创建关注表
+CREATE TABLE `follows` (
+    `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '关注ID',
+    `follower_id` BIGINT(20) NOT NULL COMMENT '关注者ID',
+    `followee_id` BIGINT(20) NOT NULL COMMENT '被关注者ID',
+    `created_at` DATETIME NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`follower_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (`followee_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 创建通告表
+CREATE TABLE `announcements` (
+    `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '通告ID',
+    `title` VARCHAR(255) NOT NULL COMMENT '通告标题',
+    `content` TEXT NOT NULL COMMENT '通告内容',
+    `isDelete` INT(11) NOT NULL DEFAULT 0 COMMENT '删除标志，0为未删除，1为已删除',
+    `created_at` DATETIME NOT NULL COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL COMMENT '更新时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
