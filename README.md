@@ -169,3 +169,6 @@
 本项目参考并使用了以下开源仓库的功能：
 
 - [MybatisPlus模板代码生成器](https://github.com/gnanquanmama/tropical-fish "tropical-fish") 。
+
+最后以防万一有人没看见项目侧边栏试用网站：[预览网站](http://47.108.166.11/)
+当然不会一直开着吧。。。服务器也要捣鼓，访问不成功就择日吧
